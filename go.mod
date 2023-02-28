@@ -1,4 +1,4 @@
-module gencode
+module github.com/maolinc/gencode
 
 go 1.19
 

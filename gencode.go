@@ -1,7 +1,7 @@
 package main
 
 import (
-	gencode "gencode/core"
+	gencode "github.com/maolinc/gencode/core"
 	"log"
 )
 

@@ -3,7 +3,7 @@ package gencode
 import (
 	"bytes"
 	"database/sql"
-	"gencode/tools/stringx"
+	"github.com/maolinc/gencode/tools/stringx"
 
 	"fmt"
 
