@@ -3,11 +3,10 @@ package gencode
 import (
 	"bytes"
 	"database/sql"
-	"github.com/maolinc/gencode/tools/stringx"
-
 	"fmt"
-
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/maolinc/gencode/tools"
+	"github.com/maolinc/gencode/tools/stringx"
 	"log"
 	"os"
 	"strings"
@@ -16,7 +15,7 @@ import (
 )
 
 const (
-	templatePath = "template"
+	TemplatePath = "gencode"
 )
 
 var (
@@ -142,7 +141,7 @@ func (d *Dataset) Session(config *SessionConfig) *Dataset {
 	if config.TemplateFilePath != "" {
 		newDataset.SessionConfig.TemplateFilePath = config.TemplateFilePath
 	} else {
-		newDataset.SessionConfig.TemplateFilePath = templatePath
+		newDataset.SessionConfig.TemplateFilePath = tools.GetHomeDir() + "/" + TemplatePath
 	}
 
 	// copy tableSet and filter field
@@ -201,7 +200,7 @@ func From(dbConfig *DBConfig, config *Config) (dataset *Dataset) {
 	dataset = &Dataset{
 		SessionConfig: &SessionConfig{
 			ServiceName:      config.ServiceName,
-			TemplateFilePath: templatePath,
+			TemplateFilePath: TemplatePath,
 			OutPath:          "",
 		},
 		TableSet: tables,

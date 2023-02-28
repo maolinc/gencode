@@ -3,16 +3,17 @@
 
 # 1.安装
 ```shell
-go install https://github.com/maolinc/generatecode@latest
+go install github.com/maolinc/gencode@latest
 ```
 
 # 2.运行
 ```shell
 gencode -f="genConfig.json" 
 ```
+-f 指定配置文件路径
 
 # genConfig.json解释
-```json
+```js
 {
   "DBConfig": { //数据库配置
     "DbType": "mysql", //数据库类型
@@ -25,34 +26,34 @@ gencode -f="genConfig.json"
   "GlobalConfig": { //全局配置
     "FieldStyle": "", //字段风格,可选：mLc | m_lc,默认：mLc  效果mLc:`json:createTime` m_lc:`json:create_time`
     "ServiceName": "", //服务名称,默认为数据库名字, 影响proto、api文件名字
-    "Tables": [], //可指定代生成的表，默认全部表   eg:["sys_role", "sys_user"]
+    "Tables": [], //可指定代生成的表, 默认全部表   eg:["sys_role", "sys_user"]
     "IgnoreTables": [], //需要忽略的表  eg:["sys_post"]
     "IgnoreFields": [], //忽略字段  eg:["delete_flag", "update_time"]
-    "IgnoreMap": {} //可指定某表中忽略某些字段， eg:{"sys_role":["delete_flag","create_time"], "sys_user":["password"]}
+    "IgnoreMap": {} //可指定某表中忽略某些字段,  eg:{"sys_role":["delete_flag","create_time"], "sys_user":["password"]}
   },
-  "ApiConfig": { //api文件生成配置，替换GlobalConfig中重复字段
-    "Switch": "A", //开关选择，A:只生成api文件，B:生成api文件并执行goctl api命令， 不填则不会生成api文件
+  "ApiConfig": { //api文件生成配置, 替换GlobalConfig中重复字段
+    "Switch": "A", //开关选择, A:只生成api文件, B:生成api文件并执行goctl api命令,  不填则不会生成api文件
     "GoZeroStyle": "", //指定goctl命令中的style
-    "DateStyle": "", //控制日期类型格式，可选：string、number, 默认number对于的日期格式为int64
-    "ServiceName": "", //服务名字，默认为GlobalConfig中ServiceName
+    "DateStyle": "", //控制日期类型格式, 可选：string、number, 默认number对于的日期格式为int64
+    "ServiceName": "", //服务名字, 默认为GlobalConfig中ServiceName
     "Syntax": "", //api文件的syntax
-    "Prefix": "", //api文件的接口前缀，默认数据库名称
+    "Prefix": "", //api文件的接口前缀, 默认数据库名称
     "Author": "", //api文件的author
     "Email": "", //api文件的email
     "Version": "", //api文件的version
-    "OutPath": "", //指定api文件生成输出路径，默认会在当前路径生成api文件夹
-    "IgnoreFieldValue": {} //控制字段在创建、更新、查询时是否显示，具体规则见下面
+    "OutPath": "", //指定api文件生成输出路径, 默认会在当前路径生成api文件夹
+    "IgnoreFieldValue": {} //控制字段在创建、更新、查询时是否显示, 具体规则见下面
   },
-  "ProtoConfig":{  //proto文件生成配置，替换GlobalConfig中重复字段
-    "Switch": "A", //开关选择，A:只生成proto文件，B:生成proto文件并执行goctl rpc命令， 不填则不会生成proto文件
+  "ProtoConfig":{  //proto文件生成配置, 替换GlobalConfig中重复字段
+    "Switch": "A", //开关选择, A:只生成proto文件, B:生成proto文件并执行goctl rpc命令,  不填则不会生成proto文件
     "GoZeroStyle": "", //指定goctl命令中的style
-    "DateStyle": "", //控制日期类型格式，可选：string、number, 默认number对于的日期格式为int64
-    "ServiceName": "", //服务名字，默认为GlobalConfig中ServiceName
+    "DateStyle": "", //控制日期类型格式, 可选：string、number, 默认number对于的日期格式为int64
+    "ServiceName": "", //服务名字, 默认为GlobalConfig中ServiceName
     "Syntax": "", //proto文件的syntax
     "GoPackage": "", //proto文件的go_package
     "Package": "", //proto文件的package
-    "OutPath": "", //指定proto文件生成输出路径，默认会在当前路径生成rpc文件夹
-    "IgnoreFieldValue": {} //控制字段在创建、更新、查询时是否显示，具体规则见下面
+    "OutPath": "", //指定proto文件生成输出路径, 默认会在当前路径生成rpc文件夹
+    "IgnoreFieldValue": {} //控制字段在创建、更新、查询时是否显示, 具体规则见下面
   }
 }
 ```
@@ -126,23 +127,20 @@ gencode -f="genConfig.json"
 # IgnoreFieldValue
 ```shell
 IgnoreFieldValue: 类型字典{K:V}结构,K-string,V-int, 可以灵活控制字段在创建、更新、查询时是否显示
-K对应字段，V对应字段值
+K对应字段, V对应字段值
 默认值：{"create_time": 3, "create_at": 3, "update_time": 3, "update_by": 3, "delete_flag": 7, "del_flag": 7, "create_by": 3}
-V显示规则: 1(create), 2(update),4(select),8(delete), 1+2=3(create,update),1+2+4=7(create,select,update)
-可以自己根据1、2、4、8进行组合
+V显示规则: 1(create), 2(update),4(select),8(delete), 1+2=3(create,update)
+          1+2+4=7(create,select,update)
+根据1、2、4、8进行组合就行
 
-举个例子: {create_time:1, delete_flag:7, id:1}
+举个例子: 
 对于sys_user表, 结构看下面的sql
-如果不想delete_flag字段在创建、查询、更新的结构体存在，可写 {"delete_flag":7}
-如果不想create_time和update_time字段在创建、更新的结构体存在，可写 {"create_time":3, "update_time":3}
-如果不想password字段在查询的结构体存在，可写 {"password":4}
+如果不想delete_flag字段在创建、查询、更新的结构体存在, 可写 {"delete_flag":7}
+如果不想create_time和update_time字段在创建、更新的结构体存在, 可写 {"create_time":3, "update_time":3}
+如果不想password字段在查询的结构体存在, 可写 {"password":4}
 
 这么做的原因是借助二进制进行控制
 // false->ignore  true->show  eg:2 & 7 = 010 & 111 = 010= 2==0=false ignore
-func isIgnore(checkValue, ignoreValue int64) bool {
-	a := checkValue & ignoreValue
-	return a == 0
-}
 ```
 ```sql
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '用户ID',
