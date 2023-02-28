@@ -18,10 +18,10 @@ gencode -f="genConfig.json"
   "DBConfig": { //数据库配置
     "DbType": "mysql", //数据库类型
     "DBName": "koala", //数据库名字
-    "Host": "192.168.2.85", //数据库地址
+    "Host": "127.0.0.1", //数据库地址
     "Port": 3306, //数据库端口
-    "User": "cml", //数据库用户名
-    "Password": "cml@123" //数据库密码
+    "User": "root", //数据库用户名
+    "Password": "123456" //数据库密码
   },
   "GlobalConfig": { //全局配置
     "FieldStyle": "", //字段风格,可选：mLc | m_lc,默认：mLc  效果mLc:`json:createTime` m_lc:`json:create_time`
