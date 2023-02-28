@@ -159,4 +159,4 @@ V显示规则: 1(create), 2(update),4(select),8(delete), 1+2=3(create,update)
 ![img.png](img.png)
 
 # 其他
-1. 查询sql部分参考了https://github.com/Mikaelemmmm/sql2pb代码
+1. 查询sql部分参考了https://github.com/Mikaelemmmm/sql2pb
