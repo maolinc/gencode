@@ -12,6 +12,9 @@ gencode -f="genConfig.json"
 ```
 -f 指定配置文件路径
 
+# 部分生成的代码
+![img.png](img.png)
+
 # genConfig.json解释
 ```js
 {
@@ -64,10 +67,10 @@ gencode -f="genConfig.json"
   "DBConfig": {
     "DbType": "mysql",
     "DBName": "koala",
-    "Host": "192.168.2.85",
+    "Host": "127.0.0.1",
     "Port": 3306,
-    "User": "cml",
-    "Password": "cml@123"
+    "User": "root",
+    "Password": "123456"
   },
   "ApiConfig": {
     "Switch": "A"
@@ -155,8 +158,6 @@ V显示规则: 1(create), 2(update),4(select),8(delete), 1+2=3(create,update)
   `salt` varchar(128) NOT NULL COMMENT '加密盐',
 ```
 
-# 部分生成的代码
-![img.png](img.png)
 
 # 其他
 1. 查询sql部分参考了https://github.com/Mikaelemmmm/sql2pb
