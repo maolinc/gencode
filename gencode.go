@@ -29,5 +29,8 @@ func main() {
 
 	protoSchema := gencode.NewProtoSchema(dataset.Session(jsonConfig.ProtoConfig.SessionConfig), jsonConfig.ProtoConfig.ProtoConfig)
 
-	gencode.Generates(apiSchema, protoSchema)
+	//jsonConfig.ModelConfig.DBConfig = jsonConfig.DBConfig
+	modelSchema := gencode.NewModelSchema(dataset.Session(jsonConfig.ModelConfig.SessionConfig), jsonConfig.ModelConfig.ModelConfig)
+
+	gencode.Generates(apiSchema, protoSchema, modelSchema)
 }

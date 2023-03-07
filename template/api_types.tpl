@@ -38,6 +38,8 @@ type Detail{{.CamelName}}Resp {
 
 type Search{{.CamelName}}Req {
     SearchBase // 内置查询参数
+    {{- range  .Fields -}}  {{.CamelName}} {{.DataType}} `json:"{{.StyleName}},optional"` //{{.Comment}}
+    {{end -}}
 }
 
 type Search{{.CamelName}}Resp {

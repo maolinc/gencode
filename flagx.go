@@ -15,6 +15,7 @@ type JsonConfig struct {
 	GlobalConfig *gencode.Config
 	ApiConfig    *gencode.ApiSchema
 	ProtoConfig  *gencode.ProtoSchema
+	ModelConfig  *gencode.ModelSchema
 }
 
 func getDefaultConfig() *JsonConfig {

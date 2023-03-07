@@ -151,7 +151,7 @@ func (d *Dataset) Session(config *SessionConfig) *Dataset {
 		for _, field := range table.Fields {
 			nField := *field
 			nField.IgnoreValue = config.IgnoreFieldValue[nField.Name]
-			if config.DateStyle == "string" && isDate(field.OriginDataType) {
+			if config.DateStyle == "string" && isDateType(field.OriginDataType) {
 				nField.DataType = "string"
 			}
 			fields = append(fields, &nField)
@@ -364,6 +364,10 @@ func transformDataType(typ string) string {
 	return dataType
 }
 
+func isDateType(typ string) bool {
+	return inSlice([]string{"date", "time", "datetime", "timestamp"}, typ)
+}
+
 func inSlice(slice []string, dest string) bool {
 	for i := range slice {
 		if slice[i] == dest {
@@ -431,8 +435,4 @@ func toLower(s string) string {
 func isIgnore(checkValue, ignoreValue int64) bool {
 	a := checkValue & ignoreValue
 	return a == 0
-}
-
-func isDate(d string) bool {
-	return inSlice([]string{"date", "time", "datetime", "timestamp"}, d)
 }

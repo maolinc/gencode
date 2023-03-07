@@ -9,18 +9,15 @@ info(
 	version: "{{.Version}}"
 )
 
-// 基本查询参数
+// 基本查询参数, 根据自己需要进行修改
 type SearchBase {
-    Id int64 `json:"id,optional"`
-    Ids []int64 `json:"ids,optional"` // id集合
-    UserId int64 `json:"userId,optional"`             // 用户id
     Keyword string `json:"keyword,optional"`          // 关键字
+    Cursor int64 `json:"cursor,optional"`             // 游标,基于游标分页时使用
+    CursorAsc bool `json:"cursorAsc,optional"`          // 游标分页时方向 true:asc  false:desc
     PageSize int `json:"pageSize,optional"`           // 每页条数
     PageCurrent int `json:"pageCurrent,optional"`     // 当前页
-    StartTime int64 `json:"startTime,optional"`       // 开始时间
-    EndTime int64 `json:"endTime,optional"`           // 结束时间
-    OrderSort []string `json:"orderSort,optional"`    // 排序
-    SearchPlus [][]string `json:"searchPlus,optional"` // 加强版搜索参数  如 [["p_id", "=", "a", "string"], ["complete_time", ">=", "1674373544","number"]]
+    OrderSort []string `json:"orderSort,optional"`    // 排序 eg： ["create_time asc", "id desc"]
+    SearchPlus [][]string `json:"searchPlus,optional"` // 加强版搜索参数  eg: [["p_id", "=", "a", "string"], ["complete_time", ">=", "1674373544","number"]]
 }
 
 // 统一分页返回
@@ -29,6 +26,7 @@ type PageBase {
     PageCurrent int `json:"pageCurrent,omitempty"` // 当前页
     PageSize int `json:"pageSize,omitempty"` // 分页大小
     PageTotal int `json:"pageTotal,omitempty"` // 总分页数
+    LastCursor int64 `json:"lastCursor,omitempty"` // 使用游标分页时, 返回最后一个游标
 }
 
 type (
