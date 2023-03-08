@@ -1,0 +1,74 @@
+
+syntax = "v1"
+
+info(
+	title: "MExternalServer类型"
+	desc: "mExternalServer的类型"
+	author: ""
+	email: ""
+	version: ""
+)
+
+import (
+    "types/common.api"
+)
+
+type CreateMExternalServerReq {    
+     Type string `json:"type,optional"` // 
+     Name string `json:"name,optional"` // 
+     Proj string `json:"proj,optional"` // 
+     Addr string `json:"addr,optional"` // 
+     Desc string `json:"desc,optional"` // 
+     ApiMap string `json:"apiMap,optional"` // 
+     Attach string `json:"attach,optional"` // 
+     CreatedAt string `json:"createdAt,optional"` // 
+     UpdatedAt string `json:"updatedAt,optional"` // 
+     DeletedAt string `json:"deletedAt,optional"` // 
+}
+
+type CreateMExternalServerResp {
+}
+
+type UpdateMExternalServerReq {
+    Id int64 `json:"id"` //
+    Type string `json:"type,optional"` //
+    Name string `json:"name,optional"` //
+    Proj string `json:"proj,optional"` //
+    Addr string `json:"addr,optional"` //
+    Desc string `json:"desc,optional"` //
+    ApiMap string `json:"apiMap,optional"` //
+    Attach string `json:"attach,optional"` //
+    CreatedAt string `json:"createdAt,optional"` //
+    UpdatedAt string `json:"updatedAt,optional"` //
+    DeletedAt string `json:"deletedAt,optional"` //
+}
+
+type UpdateMExternalServerResp {
+}
+
+type DeleteMExternalServerResp {
+}
+
+type DetailMExternalServerResp {
+    MExternalServerView
+}
+
+type SearchMExternalServerReq {
+    SearchBase // 内置查询参数
+    Id int64 `json:"id,optional"` //
+    Type string `json:"type,optional"` //
+    Name string `json:"name,optional"` //
+    Proj string `json:"proj,optional"` //
+    Addr string `json:"addr,optional"` //
+    Desc string `json:"desc,optional"` //
+    ApiMap string `json:"apiMap,optional"` //
+    Attach string `json:"attach,optional"` //
+    CreatedAt string `json:"createdAt,optional"` //
+    UpdatedAt string `json:"updatedAt,optional"` //
+    DeletedAt string `json:"deletedAt,optional"` //
+    }
+
+type SearchMExternalServerResp {
+    PageBase // 分页参数
+    List []MExternalServerView `json:"list"` // 列表
+}

@@ -20,7 +20,7 @@ import (
 	prefix: {{$prefix}}/{{.CamelName}}
 	group: {{toLower .CamelName}}
 )
-service {{$serviceName}}-api {
+service {{$serviceName}} {
 	@doc "添加{{.CamelName}}"
 	@handler Create{{.CamelName}}
 	post /create (Create{{.CamelName}}Req) returns (Create{{.CamelName}}Resp)

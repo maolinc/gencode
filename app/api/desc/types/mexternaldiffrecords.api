@@ -1,0 +1,89 @@
+
+syntax = "v1"
+
+info(
+	title: "MExternalDiffRecords类型"
+	desc: "mExternalDiffRecords的类型"
+	author: ""
+	email: ""
+	version: ""
+)
+
+import (
+    "types/common.api"
+)
+
+type CreateMExternalDiffRecordsReq {    
+     ProjectId int64 `json:"projectId,optional"` // 
+     TaskId string `json:"taskId,optional"` // 
+     StartArtifactId int64 `json:"startArtifactId,optional"` // 
+     StartCommit string `json:"startCommit,optional"` // 
+     StartTs int64 `json:"startTs,optional"` // 
+     EndArtifactId int64 `json:"endArtifactId,optional"` // 
+     EndCommit string `json:"endCommit,optional"` // 
+     EndTs int64 `json:"endTs,optional"` // 
+     Type string `json:"type,optional"` // 
+     LogFilePath string `json:"logFilePath,optional"` // 
+     DiffFilePath string `json:"diffFilePath,optional"` // 
+     Status string `json:"status,optional"` // 
+     CreatedAt string `json:"createdAt,optional"` // 
+     UpdatedAt string `json:"updatedAt,optional"` // 
+     DeletedAt string `json:"deletedAt,optional"` // 
+}
+
+type CreateMExternalDiffRecordsResp {
+}
+
+type UpdateMExternalDiffRecordsReq {
+    Id int64 `json:"id"` //
+    ProjectId int64 `json:"projectId,optional"` //
+    TaskId string `json:"taskId,optional"` //
+    StartArtifactId int64 `json:"startArtifactId,optional"` //
+    StartCommit string `json:"startCommit,optional"` //
+    StartTs int64 `json:"startTs,optional"` //
+    EndArtifactId int64 `json:"endArtifactId,optional"` //
+    EndCommit string `json:"endCommit,optional"` //
+    EndTs int64 `json:"endTs,optional"` //
+    Type string `json:"type,optional"` //
+    LogFilePath string `json:"logFilePath,optional"` //
+    DiffFilePath string `json:"diffFilePath,optional"` //
+    Status string `json:"status,optional"` //
+    CreatedAt string `json:"createdAt,optional"` //
+    UpdatedAt string `json:"updatedAt,optional"` //
+    DeletedAt string `json:"deletedAt,optional"` //
+}
+
+type UpdateMExternalDiffRecordsResp {
+}
+
+type DeleteMExternalDiffRecordsResp {
+}
+
+type DetailMExternalDiffRecordsResp {
+    MExternalDiffRecordsView
+}
+
+type SearchMExternalDiffRecordsReq {
+    SearchBase // 内置查询参数
+    Id int64 `json:"id,optional"` //
+    ProjectId int64 `json:"projectId,optional"` //
+    TaskId string `json:"taskId,optional"` //
+    StartArtifactId int64 `json:"startArtifactId,optional"` //
+    StartCommit string `json:"startCommit,optional"` //
+    StartTs int64 `json:"startTs,optional"` //
+    EndArtifactId int64 `json:"endArtifactId,optional"` //
+    EndCommit string `json:"endCommit,optional"` //
+    EndTs int64 `json:"endTs,optional"` //
+    Type string `json:"type,optional"` //
+    LogFilePath string `json:"logFilePath,optional"` //
+    DiffFilePath string `json:"diffFilePath,optional"` //
+    Status string `json:"status,optional"` //
+    CreatedAt string `json:"createdAt,optional"` //
+    UpdatedAt string `json:"updatedAt,optional"` //
+    DeletedAt string `json:"deletedAt,optional"` //
+    }
+
+type SearchMExternalDiffRecordsResp {
+    PageBase // 分页参数
+    List []MExternalDiffRecordsView `json:"list"` // 列表
+}

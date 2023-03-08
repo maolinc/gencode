@@ -1,0 +1,115 @@
+
+syntax = "v1"
+
+info(
+	title: "MBug类型"
+	desc: "bug表的类型"
+	author: ""
+	email: ""
+	version: ""
+)
+
+import (
+    "types/common.api"
+)
+
+type CreateMBugReq {    
+     ProjectId int64 `json:"projectId,default=0"` //所属项目id 
+     CreateUser int64 `json:"createUser,optional"` // 
+     DeleteTime string `json:"deleteTime,optional"` // 
+     DeleteState int64 `json:"deleteState,default=0"` // 
+     MasterVersionId int64 `json:"masterVersionId,default=0"` //迭代版本号 
+     SourceKind int64 `json:"sourceKind,default=0"` //bug来源（1制品、2版本、3其他） 
+     SourceId int64 `json:"sourceId,default=0"` //来源id 
+     SourceName string `json:"sourceName"` //来源名字 
+     EnvId int64 `json:"envId,default=0"` //环境id 
+     Feedback string `json:"feedback"` //反馈者 
+     Kind string `json:"kind"` //bug类型 
+     Os string `json:"os"` //操作系统（all、pc、ios、android） 
+     Serious string `json:"serious,default=1"` //严重程度1.2.3.4,越大越重 
+     Priority string `json:"priority,default=1"` //优先级1.2.3.4,越大越高 
+     Title string `json:"title"` //bug名称 
+     Des string `json:"des"` //bug描述 
+     Status string `json:"status,default=1"` //状态 
+     Solve string `json:"solve"` //解决方案 
+     CommitTime string `json:"commitTime,optional"` //bug提交提交时间 
+     Appear string `json:"appear"` //发现版本 
+     TitleUrl string `json:"titleUrl"` //标题超链接 
+     IdUrl string `json:"idUrl"` //id超链接 
+     UploadTime string `json:"uploadTime"` //上传时间 
+}
+
+type CreateMBugResp {
+}
+
+type UpdateMBugReq {
+    Id int64 `json:"id"` //
+    ProjectId int64 `json:"projectId,optional"` //所属项目id
+    CreateUser int64 `json:"createUser,optional"` //
+    DeleteTime string `json:"deleteTime,optional"` //
+    DeleteState int64 `json:"deleteState,optional"` //
+    MasterVersionId int64 `json:"masterVersionId,optional"` //迭代版本号
+    SourceKind int64 `json:"sourceKind,optional"` //bug来源（1制品、2版本、3其他）
+    SourceId int64 `json:"sourceId,optional"` //来源id
+    SourceName string `json:"sourceName,optional"` //来源名字
+    EnvId int64 `json:"envId,optional"` //环境id
+    Feedback string `json:"feedback,optional"` //反馈者
+    Kind string `json:"kind,optional"` //bug类型
+    Os string `json:"os,optional"` //操作系统（all、pc、ios、android）
+    Serious string `json:"serious,optional"` //严重程度1.2.3.4,越大越重
+    Priority string `json:"priority,optional"` //优先级1.2.3.4,越大越高
+    Title string `json:"title,optional"` //bug名称
+    Des string `json:"des,optional"` //bug描述
+    Status string `json:"status,optional"` //状态
+    Solve string `json:"solve,optional"` //解决方案
+    CommitTime string `json:"commitTime,optional"` //bug提交提交时间
+    Appear string `json:"appear,optional"` //发现版本
+    TitleUrl string `json:"titleUrl,optional"` //标题超链接
+    IdUrl string `json:"idUrl,optional"` //id超链接
+    UploadTime string `json:"uploadTime,optional"` //上传时间
+}
+
+type UpdateMBugResp {
+}
+
+type DeleteMBugResp {
+}
+
+type DetailMBugResp {
+    MBugView
+}
+
+type SearchMBugReq {
+    SearchBase // 内置查询参数
+    Id int64 `json:"id,optional"` //
+    ProjectId int64 `json:"projectId,optional"` //所属项目id
+    CreateUser int64 `json:"createUser,optional"` //
+    CreateTime string `json:"createTime,optional"` //
+    UpdateTime string `json:"updateTime,optional"` //
+    DeleteTime string `json:"deleteTime,optional"` //
+    DeleteState int64 `json:"deleteState,optional"` //
+    MasterVersionId int64 `json:"masterVersionId,optional"` //迭代版本号
+    SourceKind int64 `json:"sourceKind,optional"` //bug来源（1制品、2版本、3其他）
+    SourceId int64 `json:"sourceId,optional"` //来源id
+    SourceName string `json:"sourceName,optional"` //来源名字
+    EnvId int64 `json:"envId,optional"` //环境id
+    Feedback string `json:"feedback,optional"` //反馈者
+    Kind string `json:"kind,optional"` //bug类型
+    Os string `json:"os,optional"` //操作系统（all、pc、ios、android）
+    Serious string `json:"serious,optional"` //严重程度1.2.3.4,越大越重
+    Priority string `json:"priority,optional"` //优先级1.2.3.4,越大越高
+    Title string `json:"title,optional"` //bug名称
+    Des string `json:"des,optional"` //bug描述
+    Status string `json:"status,optional"` //状态
+    Solve string `json:"solve,optional"` //解决方案
+    CommitTime string `json:"commitTime,optional"` //bug提交提交时间
+    Appear string `json:"appear,optional"` //发现版本
+    TitleUrl string `json:"titleUrl,optional"` //标题超链接
+    IdUrl string `json:"idUrl,optional"` //id超链接
+    UploadTime string `json:"uploadTime,optional"` //上传时间
+    }
+
+type SearchMBugResp {
+    PageBase // 分页参数
+    List []MBugView `json:"list"` // 列表
+}

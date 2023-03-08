@@ -14,8 +14,8 @@ type SearchBase {
     Keyword string `json:"keyword,optional"`          // 关键字
     Cursor int64 `json:"cursor,optional"`             // 游标,基于游标分页时使用
     CursorAsc bool `json:"cursorAsc,optional"`          // 游标分页时方向 true:asc  false:desc
-    PageSize int `json:"pageSize,optional"`           // 每页条数
-    PageCurrent int `json:"pageCurrent,optional"`     // 当前页
+    PageSize int `json:"pageSize,default=20,optional"`           // 每页条数
+    PageCurrent int `json:"pageCurrent,default=1,optional"`     // 当前页
     OrderSort []string `json:"orderSort,optional"`    // 排序 eg： ["create_time asc", "id desc"]
     SearchPlus [][]string `json:"searchPlus,optional"` // 加强版搜索参数  eg: [["p_id", "=", "a", "string"], ["complete_time", ">=", "1674373544","number"]]
 }

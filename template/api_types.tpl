@@ -14,7 +14,7 @@ import (
 )
 
 type Create{{.CamelName}}Req {
-{{- range  .Fields -}}{{if isIgnore 1 .IgnoreValue}}    {{if not .IsPrimary}} {{.CamelName}} {{.DataType}} `json:"{{.StyleName}}{{- if .HasDefault -}},default={{.Default}}{{end}}{{- if gt .MaxLength 0 -}},range=[0,{{.MaxLength}}]{{end}}{{- if .IsNullable -}},optional{{end}}"` //{{.Comment}} {{end}}
+{{- range  .Fields -}}{{if isIgnore 1 .IgnoreValue}}    {{if not .IsPrimary}} {{.CamelName}} {{.DataType}} `json:"{{.StyleName}}{{- if .HasDefault -}},default={{.Default}}{{end}}{{- if .IsNullable -}},optional{{end}}"` //{{.Comment}} {{end}}
 {{end -}}
 {{end -}}}
 
@@ -22,7 +22,7 @@ type Create{{.CamelName}}Resp {
 }
 
 type Update{{.CamelName}}Req {
-{{range  .Fields -}}{{if isIgnore 2 .IgnoreValue}}    {{.CamelName}} {{.DataType}} `json:"{{.StyleName}}{{- if gt .MaxLength 0 -}},range=[0,{{.MaxLength}}]{{end}}{{- if .IsNullable -}},optional{{end}}"` //{{.Comment}}
+{{range  .Fields -}}{{if isIgnore 2 .IgnoreValue}}    {{.CamelName}} {{.DataType}} `json:"{{.StyleName}}{{- if not .IsPrimary -}},optional{{end}}"` //{{.Comment}}
 {{end -}}
 {{end -}}}
 
@@ -38,7 +38,7 @@ type Detail{{.CamelName}}Resp {
 
 type Search{{.CamelName}}Req {
     SearchBase // 内置查询参数
-    {{- range  .Fields -}}  {{.CamelName}} {{.DataType}} `json:"{{.StyleName}},optional"` //{{.Comment}}
+    {{range .Fields -}}  {{.CamelName}} {{.DataType}} `json:"{{.StyleName}},optional"` //{{.Comment}}
     {{end -}}
 }
 
