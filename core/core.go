@@ -357,7 +357,7 @@ func transformDataType(typ string) string {
 	case "tinyint", "smallint", "int", "mediumint", "bigint":
 		dataType = "int64"
 	case "float", "decimal", "double":
-		dataType = "double"
+		dataType = "float64"
 	case "json":
 		dataType = "string"
 	}

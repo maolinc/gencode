@@ -1,0 +1,64 @@
+
+syntax = "v1"
+
+info(
+	title: "MProject类型"
+	desc: "项目表的类型"
+	author: ""
+	email: ""
+	version: ""
+)
+
+import (
+    "types/common.api"
+)
+
+type CreateMProjectReq {    
+     CreateUser int64 `json:"createUser,optional"` //创建者id 
+     DeleteTime string `json:"deleteTime,optional"` // 
+     DeleteState int64 `json:"deleteState,default=0"` // 
+     Name string `json:"name"` //项目名称 
+     Des string `json:"des"` // 
+     Status int64 `json:"status,default=1"` //状态(1启用，2停用) 
+}
+
+type CreateMProjectResp {
+}
+
+type UpdateMProjectReq {
+    Id int64 `json:"id"` //
+    CreateUser int64 `json:"createUser,optional"` //创建者id
+    DeleteTime string `json:"deleteTime,optional"` //
+    DeleteState int64 `json:"deleteState,optional"` //
+    Name string `json:"name,optional"` //项目名称
+    Des string `json:"des,optional"` //
+    Status int64 `json:"status,optional"` //状态(1启用，2停用)
+}
+
+type UpdateMProjectResp {
+}
+
+type DeleteMProjectResp {
+}
+
+type DetailMProjectResp {
+    MProjectView
+}
+
+type SearchMProjectReq {
+    SearchBase // 内置查询参数
+    Id int64 `json:"id,optional"` //
+    CreateUser int64 `json:"createUser,optional"` //创建者id
+    CreateTime string `json:"createTime,optional"` //
+    UpdateTime string `json:"updateTime,optional"` //
+    DeleteTime string `json:"deleteTime,optional"` //
+    DeleteState int64 `json:"deleteState,optional"` //
+    Name string `json:"name,optional"` //项目名称
+    Des string `json:"des,optional"` //
+    Status int64 `json:"status,optional"` //状态(1启用，2停用)
+    }
+
+type SearchMProjectResp {
+    PageBase // 分页参数
+    List []MProjectView `json:"list"` // 列表
+}

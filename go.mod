@@ -5,8 +5,10 @@ go 1.19
 require (
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/jinzhu/copier v0.3.5
+	github.com/maolinc/copier v0.0.0-20230308122822-96b2f568544f
 	github.com/pkg/errors v0.9.1
 	github.com/zeromicro/go-zero v1.4.4
+	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4
 	gorm.io/driver/mysql v1.4.7
 	gorm.io/gorm v1.24.6
 )

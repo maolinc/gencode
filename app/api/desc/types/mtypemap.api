@@ -1,0 +1,76 @@
+
+syntax = "v1"
+
+info(
+	title: "MTypeMap类型"
+	desc: "分类映射表的类型"
+	author: ""
+	email: ""
+	version: ""
+)
+
+import (
+    "types/common.api"
+)
+
+type CreateMTypeMapReq {    
+     CreateUser int64 `json:"createUser,optional"` //id 
+     DeleteTime string `json:"deleteTime,optional"` // 
+     DeleteState int64 `json:"deleteState,default=0"` // 
+     Pid int64 `json:"pid,default=0"` //上级分类id 
+     Name string `json:"name"` //类型名称 
+     Des string `json:"des"` //描述 
+     Status int64 `json:"status,default=1"` //状态(1启用用，2停用) 
+     Ext1 string `json:"ext1,optional"` // 
+     Ext2 string `json:"ext2,optional"` // 
+     Ext3 string `json:"ext3,optional"` // 
+}
+
+type CreateMTypeMapResp {
+}
+
+type UpdateMTypeMapReq {
+    Id int64 `json:"id"` //
+    CreateUser int64 `json:"createUser,optional"` //id
+    DeleteTime string `json:"deleteTime,optional"` //
+    DeleteState int64 `json:"deleteState,optional"` //
+    Pid int64 `json:"pid,optional"` //上级分类id
+    Name string `json:"name,optional"` //类型名称
+    Des string `json:"des,optional"` //描述
+    Status int64 `json:"status,optional"` //状态(1启用用，2停用)
+    Ext1 string `json:"ext1,optional"` //
+    Ext2 string `json:"ext2,optional"` //
+    Ext3 string `json:"ext3,optional"` //
+}
+
+type UpdateMTypeMapResp {
+}
+
+type DeleteMTypeMapResp {
+}
+
+type DetailMTypeMapResp {
+    MTypeMapView
+}
+
+type SearchMTypeMapReq {
+    SearchBase // 内置查询参数
+    Id int64 `json:"id,optional"` //
+    CreateUser int64 `json:"createUser,optional"` //id
+    CreateTime string `json:"createTime,optional"` //
+    UpdateTime string `json:"updateTime,optional"` //
+    DeleteTime string `json:"deleteTime,optional"` //
+    DeleteState int64 `json:"deleteState,optional"` //
+    Pid int64 `json:"pid,optional"` //上级分类id
+    Name string `json:"name,optional"` //类型名称
+    Des string `json:"des,optional"` //描述
+    Status int64 `json:"status,optional"` //状态(1启用用，2停用)
+    Ext1 string `json:"ext1,optional"` //
+    Ext2 string `json:"ext2,optional"` //
+    Ext3 string `json:"ext3,optional"` //
+    }
+
+type SearchMTypeMapResp {
+    PageBase // 分页参数
+    List []MTypeMapView `json:"list"` // 列表
+}

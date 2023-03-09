@@ -49,7 +49,7 @@ type (
     }
 )
 
-func New{{.CamelName}}Mode(db *gorm.DB {{- if .IsCache}}, c cache.CacheConf{{end}}) {{.CamelName}}Model {
+func New{{.CamelName}}Model(db *gorm.DB {{- if .IsCache}}, c cache.CacheConf{{end}}) {{.CamelName}}Model {
 	return &default{{.CamelName}}Model{
 		customConn: {{if .IsCache}}newCustomConn(db, c){{else}}newCustomConnNoCache(db){{end}},
 		table:      "{{.Name}}",

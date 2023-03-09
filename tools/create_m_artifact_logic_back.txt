@@ -1,0 +1,19 @@
+package tools
+
+import (
+	"github.com/maolinc/copier"
+	"github.com/maolinc/gencode/app/model"
+	"github.com/pkg/errors"
+)
+
+func (l *CreateMArtifactLogic) CreateMArtifact(req *types.CreateMArtifactReq) (resp *types.CreateMArtifactResp, err error) {
+
+	data := &model.MArtifact{}
+	_ = copier.Copiers(data, req)
+	err = l.svcCtx.MArtifactModel.Insert(l.ctx, nil, data)
+	if err != nil {
+		return nil, errors.Wrapf(err, "req: %v", req)
+	}
+
+	return &types.CreateMArtifactResp{}, nil
+}

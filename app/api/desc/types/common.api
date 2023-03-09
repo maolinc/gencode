@@ -1,0 +1,237 @@
+
+syntax = "v1"
+
+info(
+	title: "view"
+	desc: "抽取类型,方便在其他api使用"
+	author: ""
+	email: ""
+	version: ""
+)
+
+// 基本查询参数, 根据自己需要进行修改
+type SearchBase {
+    Keyword string `json:"keyword,optional"`          // 关键字
+    Cursor int64 `json:"cursor,optional"`             // 游标,基于游标分页时使用
+    CursorAsc bool `json:"cursorAsc,optional"`          // 游标分页时方向 true:asc  false:desc
+    PageSize int `json:"pageSize,default=20,optional"`           // 每页条数
+    PageCurrent int `json:"pageCurrent,default=1,optional"`     // 当前页
+    OrderSort []string `json:"orderSort,optional"`    // 排序 eg： ["create_time asc", "id desc"]
+    SearchPlus [][]string `json:"searchPlus,optional"` // 加强版搜索参数  eg: [["p_id", "=", "a", "string"], ["complete_time", ">=", "1674373544","number"]]
+}
+
+// 统一分页返回
+type PageBase {
+    Total int64 `json:"total,omitempty"` // 总条数
+    PageCurrent int `json:"pageCurrent,omitempty"` // 当前页
+    PageSize int `json:"pageSize,omitempty"` // 分页大小
+    PageTotal int `json:"pageTotal,omitempty"` // 总分页数
+    LastCursor int64 `json:"lastCursor,omitempty"` // 使用游标分页时, 返回最后一个游标
+}
+
+type (
+    IdReq {
+        Id int64 `json:"id"`
+    }
+    IdsReq {
+        Ids []int64 `json:"ids"`
+    }
+)
+
+
+type MArtifactView {
+    Id int64 `json:"id,optional"` //制品id
+    Name string `json:"name,optional"` //制品名称 
+    Source int64 `json:"source,optional"` //制品来源(1-客户端，2-服务端)
+    Version string `json:"version,optional"` //制品版本信息
+    CommitId string `json:"commitId,optional"` //git提交id
+    CommitBranch string `json:"commitBranch,optional"` //git提交分支
+    CompleteTime string `json:"completeTime,optional"` //制品制造完成时间
+    DownloadAddr string `json:"downloadAddr,optional"` //下载地址
+    QaStatus int64 `json:"qaStatus,optional"` //qa状态(1-未qa，2-qa中，3-qa失败，4-qa通过)
+    PushStatus int64 `json:"pushStatus,optional"` //发布状态(1-未发布，2-发布中，3-发布失败，4-发布成功)
+    DetailInfo string `json:"detailInfo,optional"` //jenkins输出详情
+    CreateUser string `json:"createUser,optional"` //制品创建者
+    DeleteState int64 `json:"deleteState,optional"` //
+    DeleteTime string `json:"deleteTime,optional"` //
+    CreateTime string `json:"createTime,optional"` //创建时间
+    UpdateTime string `json:"updateTime,optional"` //更新时间
+    Ext1 string `json:"ext1,optional"` //扩展字段
+    Ext2 string `json:"ext2,optional"` //扩展字段
+    Ext3 string `json:"ext3,optional"` //扩展字段
+    Ext4 string `json:"ext4,optional"` //扩展字段
+    ExtInfo string `json:"extInfo,optional"` //扩展信息
+    ProjectId int64 `json:"projectId,optional"` //所属项目id
+    ArtifactTypeId int64 `json:"artifactTypeId,optional"` //制品类型id
+    EnvId int64 `json:"envId,optional"` //环境id
+    EnvRecord string `json:"envRecord,optional"` //环境变更记录
+    Code string `json:"code,optional"` //不能重复
+}
+
+type MArtifactTypeView {
+    Id int64 `json:"id,optional"` //
+    CreateUser int64 `json:"createUser,optional"` //创建者id
+    CreateTime string `json:"createTime,optional"` //
+    UpdateTime string `json:"updateTime,optional"` //
+    DeleteTime string `json:"deleteTime,optional"` //
+    DeleteState int64 `json:"deleteState,optional"` //
+    Name string `json:"name,optional"` //分类名称
+    Status int64 `json:"status,optional"` //分类状态 1启用 2停用
+    Des string `json:"des,optional"` //描述
+}
+
+type MBugView {
+    Id int64 `json:"id,optional"` //
+    ProjectId int64 `json:"projectId,optional"` //所属项目id
+    CreateUser int64 `json:"createUser,optional"` //
+    CreateTime string `json:"createTime,optional"` //
+    UpdateTime string `json:"updateTime,optional"` //
+    DeleteTime string `json:"deleteTime,optional"` //
+    DeleteState int64 `json:"deleteState,optional"` //
+    MasterVersionId int64 `json:"masterVersionId,optional"` //迭代版本号
+    SourceKind int64 `json:"sourceKind,optional"` //bug来源（1制品、2版本、3其他）
+    SourceId int64 `json:"sourceId,optional"` //来源id
+    SourceName string `json:"sourceName,optional"` //来源名字
+    EnvId int64 `json:"envId,optional"` //环境id
+    Feedback string `json:"feedback,optional"` //反馈者
+    Kind string `json:"kind,optional"` //bug类型
+    Os string `json:"os,optional"` //操作系统（all、pc、ios、android）
+    Serious string `json:"serious,optional"` //严重程度1.2.3.4,越大越重
+    Priority string `json:"priority,optional"` //优先级1.2.3.4,越大越高
+    Title string `json:"title,optional"` //bug名称
+    Des string `json:"des,optional"` //bug描述
+    Status string `json:"status,optional"` //状态
+    Solve string `json:"solve,optional"` //解决方案
+    CommitTime string `json:"commitTime,optional"` //bug提交提交时间
+    Appear string `json:"appear,optional"` //发现版本
+    TitleUrl string `json:"titleUrl,optional"` //标题超链接
+    IdUrl string `json:"idUrl,optional"` //id超链接
+    UploadTime string `json:"uploadTime,optional"` //上传时间
+}
+
+type MEnvView {
+    Id int64 `json:"id,optional"` //
+    CreateUser int64 `json:"createUser,optional"` //创建者id
+    CreateTime string `json:"createTime,optional"` //
+    UpdateTime string `json:"updateTime,optional"` //
+    DeleteTime string `json:"deleteTime,optional"` //
+    DeleteState int64 `json:"deleteState,optional"` //
+    Name string `json:"name,optional"` //环境名称
+    Status int64 `json:"status,optional"` //环境状态 1启用 2停用
+    Des string `json:"des,optional"` //环境描述
+    Expire int64 `json:"expire,optional"` //过期时间(时),-1永不过期
+}
+
+type MExternalDiffRecordsView {
+    Id int64 `json:"id,optional"` //
+    ProjectId int64 `json:"projectId,optional"` //
+    TaskId string `json:"taskId,optional"` //
+    StartArtifactId int64 `json:"startArtifactId,optional"` //
+    StartCommit string `json:"startCommit,optional"` //
+    StartTs int64 `json:"startTs,optional"` //
+    EndArtifactId int64 `json:"endArtifactId,optional"` //
+    EndCommit string `json:"endCommit,optional"` //
+    EndTs int64 `json:"endTs,optional"` //
+    Type string `json:"type,optional"` //
+    LogFilePath string `json:"logFilePath,optional"` //
+    DiffFilePath string `json:"diffFilePath,optional"` //
+    Status string `json:"status,optional"` //
+    CreatedAt string `json:"createdAt,optional"` //
+    UpdatedAt string `json:"updatedAt,optional"` //
+    DeletedAt string `json:"deletedAt,optional"` //
+}
+
+type MExternalServerView {
+    Id int64 `json:"id,optional"` //
+    Type string `json:"type,optional"` //
+    Name string `json:"name,optional"` //
+    Proj string `json:"proj,optional"` //
+    Addr string `json:"addr,optional"` //
+    Desc string `json:"desc,optional"` //
+    ApiMap string `json:"apiMap,optional"` //
+    Attach string `json:"attach,optional"` //
+    CreatedAt string `json:"createdAt,optional"` //
+    UpdatedAt string `json:"updatedAt,optional"` //
+    DeletedAt string `json:"deletedAt,optional"` //
+}
+
+type MExternalTaskView {
+    Id int64 `json:"id,optional"` //
+    TaskId string `json:"taskId,optional"` //
+    Type string `json:"type,optional"` //
+    Code int64 `json:"code,optional"` //
+    Res string `json:"res,optional"` //
+    Attach string `json:"attach,optional"` //
+    CreatedAt string `json:"createdAt,optional"` //
+    UpdatedAt string `json:"updatedAt,optional"` //
+    DeletedAt string `json:"deletedAt,optional"` //
+}
+
+type MMasterVersionView {
+    Id int64 `json:"id,optional"` //
+    CreateUser int64 `json:"createUser,optional"` //创建者id
+    CreateTime string `json:"createTime,optional"` //
+    UpdateTime string `json:"updateTime,optional"` //
+    DeleteTime string `json:"deleteTime,optional"` //
+    DeleteState int64 `json:"deleteState,optional"` //
+    ProjectId int64 `json:"projectId,optional"` //关联项目id
+    Name string `json:"name,optional"` //名称
+    VersionNum string `json:"versionNum,optional"` //版本代号
+    Status int64 `json:"status,optional"` //环境状态 1启用 2停用
+    Des string `json:"des,optional"` //清单描述
+}
+
+type MProjectView {
+    Id int64 `json:"id,optional"` //
+    CreateUser int64 `json:"createUser,optional"` //创建者id
+    CreateTime string `json:"createTime,optional"` //
+    UpdateTime string `json:"updateTime,optional"` //
+    DeleteTime string `json:"deleteTime,optional"` //
+    DeleteState int64 `json:"deleteState,optional"` //
+    Name string `json:"name,optional"` //项目名称
+    Des string `json:"des,optional"` //
+    Status int64 `json:"status,optional"` //状态(1启用，2停用)
+}
+
+type MTypeMapView {
+    Id int64 `json:"id,optional"` //
+    CreateUser int64 `json:"createUser,optional"` //id
+    CreateTime string `json:"createTime,optional"` //
+    UpdateTime string `json:"updateTime,optional"` //
+    DeleteTime string `json:"deleteTime,optional"` //
+    DeleteState int64 `json:"deleteState,optional"` //
+    Pid int64 `json:"pid,optional"` //上级分类id
+    Name string `json:"name,optional"` //类型名称
+    Des string `json:"des,optional"` //描述
+    Status int64 `json:"status,optional"` //状态(1启用用，2停用)
+    Ext1 string `json:"ext1,optional"` //
+    Ext2 string `json:"ext2,optional"` //
+    Ext3 string `json:"ext3,optional"` //
+}
+
+type MVersionView {
+    Id int64 `json:"id,optional"` //id
+    VersionNum string `json:"versionNum,optional"` //版本号 
+    ServerId string `json:"serverId,optional"` //服务器
+    ImageId string `json:"imageId,optional"` //镜像id
+    ApkId int64 `json:"apkId,optional"` //apk包id
+    BundleId string `json:"bundleId,optional"` //bundle_id
+    DataId string `json:"dataId,optional"` //数据档id
+    QaStatus int64 `json:"qaStatus,optional"` //qa状态(1-未qa，2-qa中，3-qa失败，4-qa通过)
+    PushStatus int64 `json:"pushStatus,optional"` //发布状态(1-未发布，2-发布中，3-发布失败，4-发布成功)
+    BugInfo string `json:"bugInfo,optional"` //bug信息
+    Des string `json:"des,optional"` //描述
+    ProjectId int64 `json:"projectId,optional"` //所属项目id
+    EnvId int64 `json:"envId,optional"` //环境id
+    CreateUser string `json:"createUser,optional"` //制品创建者
+    DeleteState int64 `json:"deleteState,optional"` //
+    DeleteTime string `json:"deleteTime,optional"` //
+    CreateTime string `json:"createTime,optional"` //创建时间
+    UpdateTime string `json:"updateTime,optional"` //更新时间
+    Ext1 string `json:"ext1,optional"` //扩展字段
+    Ext2 string `json:"ext2,optional"` //扩展字段
+    Ext3 string `json:"ext3,optional"` //扩展字段
+    Ext4 string `json:"ext4,optional"` //扩展字段
+    Pid int64 `json:"pid,optional"` //父版本id
+    Name string `json:"name,optional"` //名称
+}
