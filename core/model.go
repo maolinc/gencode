@@ -23,7 +23,6 @@ type ModelConfig struct {
 	Tables      []string
 	Switch      string
 	GoZeroStyle string
-	IsCache     bool
 }
 
 func NewModelSchema(dataset *Dataset, config *ModelConfig) *ModelSchema {

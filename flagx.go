@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/maolinc/gencode/core"
-	"github.com/maolinc/gencode/tools"
+	"github.com/maolinc/gencode/tools/filex"
 	"os"
 	"strings"
 )
@@ -59,8 +59,8 @@ func parseFlag(jsonConfig *JsonConfig) (err error) {
 }
 
 func checkTemplate() error {
-	templateDir := tools.GetHomeDir() + "/" + gencode.TemplatePath
-	exists, err := tools.PathExists(templateDir)
+	templateDir := filex.GetHomeDir() + "/" + gencode.TemplatePath
+	exists, err := filex.PathExists(templateDir)
 	if err != nil {
 		return err
 	}
@@ -72,8 +72,8 @@ func checkTemplate() error {
 }
 
 func initTemplate() (err error) {
-	templateDir := tools.GetHomeDir() + "/" + gencode.TemplatePath
-	err = tools.CopyDirEm(dir, templateDir, "template")
+	templateDir := filex.GetHomeDir() + "/" + gencode.TemplatePath
+	err = filex.CopyDirEm(dir, templateDir, "template")
 
 	return err
 }

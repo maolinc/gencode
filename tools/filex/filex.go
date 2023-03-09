@@ -1,13 +1,7 @@
-package tools
+package filex
 
 import (
 	"embed"
-	"fmt"
-	"go/ast"
-	"go/format"
-	"go/parser"
-	"go/printer"
-	"go/token"
 	"golang.org/x/mod/modfile"
 	"io"
 	"os"
@@ -126,9 +120,20 @@ func findFile(path string, filename string) (context []byte, destPath string, er
 	return findFile(parentDir, filename)
 }
 
+func GetAbs(path string) string {
+	if filepath.IsAbs(path) {
+		return path
+	}
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return path
+	}
+	return abs
+}
+
 func GetModule(path string) (module, fixPath string) {
 	var (
-		modName  = "go.mod11"
+		modName  = "go.mod"
 		context  []byte
 		destPath string
 		err      error
@@ -143,112 +148,7 @@ func GetModule(path string) (module, fixPath string) {
 		return "", ""
 	}
 	modFile := modfile.ModulePath(context)
-	return modFile, strings.TrimPrefix(path, destPath)
-}
-
-func ParseGoFile(path string, stcName, metName string) error {
-	node, err := parseFile(path)
-	if err != nil {
-		panic(err)
-	}
-	node.Imports = append(node.Imports, &ast.ImportSpec{Path: &ast.BasicLit{Value: "github.com/maolinc/gencode/app/moddddddddddddel"}})
-
-	methodNode := findMethod(node, stcName, metName)
-	if methodNode == nil {
-		panic("method not found")
-	}
-	src := `
-package martifact
-
-
-
-
-func (l *CreateMArtifactLogic) CreateMArtifact(req *types.CreateMArtifactReq) (resp *types.CreateMArtifactResp, err error) {
-
-	//data := &model.MArtifact{}
-	//_ = copier.Copiers(data, req)
-	//err = l.svcCtx.MArtifactModel.Insert(l.ctx, nil, data)
-	//if err != nil {
-	//	return nil, errors.Wrapf(err, "req: %v", req)
-	//}
-
-	return &types.CreateMArtifactResp{}, nil
-}
-	`
-	stmt, err := parseBlockStmt(src)
-	if err != nil {
-		return err
-	}
-
-	modifyMethod(methodNode, stmt)
-	//code := generateCode(node)
-	// 将修改后的 AST 转换为源代码
-	f2, err := os.Create(path)
-	if err != nil {
-		panic(err)
-	}
-	defer f2.Close()
-	fset := token.NewFileSet()
-	if err := printer.Fprint(f2, fset, node); err != nil {
-		panic(err)
-	}
-	return err
-}
-
-func parseFile(filePath string) (*ast.File, error) {
-	fset := token.NewFileSet()
-	return parser.ParseFile(fset, filePath, nil, parser.ParseComments)
-}
-
-func findMethod(node *ast.File, structName, methodName string) *ast.FuncDecl {
-	for _, decl := range node.Decls {
-		if fdecl, ok := decl.(*ast.FuncDecl); ok {
-			recv := fdecl.Recv
-			if recv == nil || len(recv.List) != 1 {
-				continue
-			}
-			field, ok := recv.List[0].Type.(*ast.StarExpr)
-			if !ok {
-				continue
-			}
-			ident, ok := field.X.(*ast.Ident)
-			if !ok || ident.Name != structName || fdecl.Name.Name != methodName {
-				continue
-			}
-			return fdecl
-		}
-	}
-	return nil
-}
-
-func modifyMethod(node *ast.FuncDecl, newBody *ast.BlockStmt) *ast.FuncDecl {
-	node.Body = newBody
-	return node
-}
-
-func generateCode(node *ast.File) string {
-	fset := token.NewFileSet()
-	var buf strings.Builder
-	if err := format.Node(&buf, fset, node); err != nil {
-		panic(err)
-	}
-	return buf.String()
-}
-
-func parseBlockStmt(text string) (*ast.BlockStmt, error) {
-	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, "", text, parser.AllErrors)
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-
-	for _, decl := range f.Decls {
-		if fn, ok := decl.(*ast.FuncDecl); ok {
-			//fmt.Printf("Function %s\n", fn.Name.Name)
-			//ast.Print(fset, fn.Body)
-			return fn.Body, nil
-		}
-	}
-	return nil, nil
+	path = strings.TrimPrefix(path, destPath)
+	path = strings.ReplaceAll(path, "\\", "/")
+	return modFile, path
 }

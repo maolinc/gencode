@@ -1,7 +1,7 @@
+{{ $Cache := .IsCache -}}
 package svc
 
 import (
-	"artifact.com/api/internal/config"
 	{{.ModelPkg}}
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -21,7 +21,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	return &ServiceContext{
 		Config:         c,
         {{range  .Dataset.TableSet -}}
-        {{.CamelName}}Model:  model.New{{.CamelName}}Model(db {{- if .IsCache}}, c.Cache{{end}})
+        {{.CamelName}}Model:  model.New{{.CamelName}}Model(db {{- if $Cache}}, c.Cache{{end}}),
         {{end -}}
 	}
 }

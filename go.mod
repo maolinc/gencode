@@ -9,6 +9,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/zeromicro/go-zero v1.4.4
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4
+	golang.org/x/tools v0.1.12
 	gorm.io/driver/mysql v1.4.7
 	gorm.io/gorm v1.24.6
 )

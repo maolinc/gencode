@@ -1,12 +1,19 @@
-func (l *CreateMArtifactLogic) CreateMArtifact(req *types.CreateMArtifactReq) (resp *types.CreateMArtifactResp, err error) {
+package {{.Package}}
 
-	var data model.MArtifact
-	_ = copier.Copiers(&data, req)
+import (
+	"github.com/maolinc/copier"
+	{{.ModelPkg}}
+	"github.com/pkg/errors"
+)
 
-	err = l.svcCtx.MArtifactModel.Insert(l.ctx, nil, &data)
+func (l *Create{{.CamelName}}Logic) Create{{.CamelName}}(req *types.Create{{.CamelName}}Req) (resp *types.Create{{.CamelName}}Resp, err error) {
+
+	data := &model.{{.CamelName}}{}
+	_ = copier.Copiers(data, req)
+	err = l.svcCtx.{{.CamelName}}Model.Insert(l.ctx, nil, data)
 	if err != nil {
-		return nil, errors.Wrapf(errors.New("operate fail!"), "createMArtifact error req: %v, error: %v", req, err)
+		return nil, errors.Wrapf(errors.New("operate fail"), "Create{{.CamelName}} req: %v, error: %v", req, err)
 	}
 
-	return &types.CreateMArtifactResp{}, nil
+	return &types.Create{{.CamelName}}Resp{}, nil
 }

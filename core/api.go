@@ -3,6 +3,9 @@ package gencode
 import (
 	"bytes"
 	"fmt"
+	"github.com/maolinc/gencode/tools/astx"
+	"github.com/maolinc/gencode/tools/filex"
+	"github.com/maolinc/gencode/tools/stringx"
 	"log"
 	"os/exec"
 	"strings"
@@ -116,12 +119,121 @@ func (s *ApiSchema) Generate() error {
 		out := bytes.Buffer{}
 		cmd.Stdout = &out
 		err = cmd.Run()
-		log.Println("goZeroOutput:" + out.String())
+		//log.Println("goZeroOutput:" + out.String())
 		if err != nil {
 			return err
 		}
 	}
 	log.Println("api success!")
+
+	return nil
+}
+
+type Tp struct {
+	IsCache    bool
+	Package    string
+	ModelPkg   string
+	SourcePath string
+	*Table
+	Dataset *Dataset
+}
+
+const (
+	createTpl = "/api_create.tpl"
+	updateTpl = "/api_update.tpl"
+	detailTpl = "/api_detail.tpl"
+	deleteTpl = "/api_delete.tpl"
+	pageTpl   = "/api_page.tpl"
+
+	svcTpl = "/api_svc.tpl"
+)
+
+func (s *ApiSchema) GenerateCrud(modelPath string) error {
+	module, path := filex.GetModule(modelPath)
+	modelPkg := module + "/" + strings.TrimPrefix(path, "/")
+	modelPkg = "\"" + modelPkg + "\""
+
+	createPath := s.TemplateFilePath + createTpl
+	updatePath := s.TemplateFilePath + updateTpl
+	detailPath := s.TemplateFilePath + detailTpl
+	deleteTPath := s.TemplateFilePath + deleteTpl
+	pagePath := s.TemplateFilePath + pageTpl
+
+	svcPath := s.TemplateFilePath + svcTpl
+
+	template := WithTemplate(createPath, updatePath, detailPath, deleteTPath, pagePath, svcPath)
+
+	err := s.genSvc(template, modelPkg)
+	if err != nil {
+		return err
+	}
+
+	for _, table := range s.TableSet {
+		t := Tp{
+			IsCache:    s.IsCache,
+			Package:    strings.ToLower(table.CamelName),
+			ModelPkg:   modelPkg,
+			Table:      table,
+			SourcePath: s.OutPath + "/internal/logic/" + strings.ToLower(table.CamelName),
+		}
+		err := s.doGenerateCrud(template, &t)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *ApiSchema) genSvc(template *template.Template, modelPkg string) error {
+	t := Tp{
+		IsCache:    s.IsCache,
+		Package:    "svc",
+		ModelPkg:   modelPkg,
+		SourcePath: s.OutPath + "/internal/svc",
+		Dataset:    s.Dataset,
+	}
+	err := s.crud(template, &t, "ServiceContext.go", svcTpl)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *ApiSchema) doGenerateCrud(template *template.Template, tp *Tp) error {
+	file := tp.CamelName
+	mp := map[string]string{"Create" + file: createTpl, "Update" + file: updateTpl, "Delete" + file: deleteTpl,
+		file + "Detail": detailTpl, file + "Page": pageTpl}
+
+	for f, t := range mp {
+		err := s.crud(template, tp, f+"Logic.go", t)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *ApiSchema) crud(template *template.Template, tp *Tp, file string, tpl string) error {
+	switch s.GoZeroStyle {
+	case "gozero":
+		file = stringx.From(file).Lower()
+	case "go_zero":
+		file = stringx.From(file).ToSnake()
+	default:
+		file = stringx.From(file).ToCamelWithStartLower()
+	}
+
+	buf := new(bytes.Buffer)
+	err := template.ExecuteTemplate(buf, strings.TrimLeft(tpl, "/"), *tp)
+	if err != nil {
+		return err
+	}
+
+	fullFile := tp.SourcePath + "/" + file
+	err = astx.MergeSource(fullFile, buf.String(), tp.Package)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -33,4 +33,9 @@ func main() {
 	modelSchema := gencode.NewModelSchema(dataset.Session(jsonConfig.ModelConfig.SessionConfig), jsonConfig.ModelConfig.ModelConfig)
 
 	gencode.Generates(apiSchema, protoSchema, modelSchema)
+
+	err = apiSchema.GenerateCrud(modelSchema.OutPath)
+	if err != nil {
+		log.Println(err)
+	}
 }

@@ -3,6 +3,7 @@ package tools
 import (
 	"fmt"
 	"github.com/maolinc/gencode/tools/astx"
+	"github.com/maolinc/gencode/tools/filex"
 	"github.com/maolinc/gencode/tools/mergex"
 	"log"
 	"os"
@@ -13,7 +14,7 @@ func TestReadFile(t *testing.T) {
 	//println(filepath.Dir(`a/b/`))
 	//fN := "go.mod"
 	path := "C:\\Users\\maolin.chen\\Desktop\\me\\workspace\\xyz\\app\\artifact\\model"
-	module, fixPath := GetModule(path)
+	module, fixPath := filex.GetModule(path)
 
 	log.Println(module, fixPath)
 	//abs, _ := filepath.Abs(path)
@@ -26,7 +27,7 @@ func TestReadFile(t *testing.T) {
 }
 
 func TestParseGoFile(t *testing.T) {
-	goF := "C:\\Users\\maolin.chen\\Desktop\\me\\workspace\\generatecode\\app\\api\\internal\\logic\\martifact\\create_m_artifact_logic.go"
+	goF := "D:\\CML\\Desktop\\Project\\workspace\\gencode\\app\\api\\internal\\logic\\martifact\\create_m_artifact_logic.go"
 	//dest := `
 	//	package martifact
 	//
@@ -48,7 +49,7 @@ func TestParseGoFile(t *testing.T) {
 	//		return &types.CreateMArtifactResp{}, nil
 	//	}
 	//`
-	err := astx.MergeSource(goF, "C:\\Users\\maolin.chen\\Desktop\\me\\workspace\\generatecode\\tools\\create_m_artifact_logic_back.txt")
+	err := astx.MergeSource(goF, "D:\\CML\\Desktop\\Project\\workspace\\gencode\\tools\\create_m_artifact_logic_back.txt")
 	if err != nil {
 		log.Println(err)
 		return

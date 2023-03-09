@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/maolinc/gencode/tools"
+	"github.com/maolinc/gencode/tools/filex"
 	"github.com/maolinc/gencode/tools/stringx"
 	"log"
 	"os"
@@ -91,6 +91,8 @@ type SessionConfig struct {
 	IgnoreFieldValue map[string]int64
 	// two style: string|number, default number
 	DateStyle string
+	// model isCache
+	IsCache bool
 }
 
 // Global configuration of dataset
@@ -141,7 +143,7 @@ func (d *Dataset) Session(config *SessionConfig) *Dataset {
 	if config.TemplateFilePath != "" {
 		newDataset.SessionConfig.TemplateFilePath = config.TemplateFilePath
 	} else {
-		newDataset.SessionConfig.TemplateFilePath = tools.GetHomeDir() + "/" + TemplatePath
+		newDataset.SessionConfig.TemplateFilePath = filex.GetHomeDir() + "/" + TemplatePath
 	}
 
 	// copy tableSet and filter field

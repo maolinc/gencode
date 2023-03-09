@@ -2,43 +2,59 @@ package astx
 
 import (
 	"fmt"
+	"github.com/maolinc/gencode/tools/filex"
 	"go/ast"
-	"go/format"
 	"go/parser"
 	"go/printer"
 	"go/token"
+	"golang.org/x/tools/go/ast/astutil"
 	"os"
 	"strings"
 )
 
-func MergeSource(srcFile, destText string) error {
-	// 解析ast
+func MergeSource(srcFile, destFile string, pkgName string) error {
+	fset := token.NewFileSet()
 	srcAst, err := parseFile(srcFile)
 	if err != nil {
 		return err
 	}
-	destAst, err := parseFile(destText)
+	destAst, err := parseFile(destFile)
 	if err != nil {
 		return err
 	}
+
+	mergeImport(srcAst, destAst)
 	pkg := ast.Package{
-		Name:    "martifact",
+		Name:    pkgName,
 		Scope:   nil,
-		Imports: nil,
+		Imports: map[string]*ast.Object{"com.c": &ast.Object{Name: "com"}},
 		Files:   map[string]*ast.File{"a.go": srcAst, "b.go": destAst},
 	}
 	mergeFile := ast.MergePackageFiles(&pkg, 7)
-	fset := token.NewFileSet()
+
 	open, err := os.Create(srcFile)
 	if err != nil {
 		return err
 	}
 	defer open.Close()
+
 	err = printer.Fprint(open, fset, mergeFile)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func mergeImport(src *ast.File, dest *ast.File) {
+	fset := token.NewFileSet()
+	destImports := astutil.Imports(fset, dest)
+	for _, destImport := range destImports {
+		for _, spec := range destImport {
+			name := strings.Trim(spec.Path.Value, "\"")
+			astutil.DeleteImport(fset, dest, name)
+			astutil.AddImport(fset, src, name)
+		}
+	}
 }
 
 func hasFunc(aFile *ast.File, funcDecl *ast.FuncDecl, replace bool) bool {
@@ -82,15 +98,6 @@ func parseBlockStmt(text string) (*ast.BlockStmt, error) {
 	return nil, nil
 }
 
-func generateCode(node *ast.File) string {
-	fset := token.NewFileSet()
-	var buf strings.Builder
-	if err := format.Node(&buf, fset, node); err != nil {
-		panic(err)
-	}
-	return buf.String()
-}
-
 func getMethodId(fdecl *ast.FuncDecl) (structName, methodName string) {
 	recv := fdecl.Recv
 	if recv == nil || len(recv.List) != 1 {
@@ -130,7 +137,19 @@ func findMethod(node *ast.File, structName, methodName string) *ast.FuncDecl {
 
 func parseFile(filePath string) (*ast.File, error) {
 	fset := token.NewFileSet()
-	return parser.ParseFile(fset, filePath, nil, parser.ParseComments)
+	var (
+		err  error
+		err1 error
+	)
+	file, err := parseString(filePath)
+	if err != nil {
+		filePath = filex.GetAbs(filePath)
+		if file, err1 = parser.ParseFile(fset, filePath, nil, parser.ParseComments); err1 != nil {
+			return nil, err
+		}
+		return file, nil
+	}
+	return file, nil
 }
 
 func parseString(txt string) (*ast.File, error) {
