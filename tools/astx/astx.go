@@ -27,7 +27,7 @@ func MergeSource(srcFile, destFile string, pkgName string) error {
 	pkg := ast.Package{
 		Name:    pkgName,
 		Scope:   nil,
-		Imports: map[string]*ast.Object{"com.c": &ast.Object{Name: "com"}},
+		Imports: nil,
 		Files:   map[string]*ast.File{"a.go": srcAst, "b.go": destAst},
 	}
 	mergeFile := ast.MergePackageFiles(&pkg, 7)
@@ -69,7 +69,6 @@ func hasFunc(aFile *ast.File, funcDecl *ast.FuncDecl, replace bool) bool {
 					aFunc.Type.Results.NumFields() == funcDecl.Type.Results.NumFields() {
 					if replace {
 						aFunc = funcDecl
-
 					}
 					return true
 				}
@@ -90,8 +89,6 @@ func parseBlockStmt(text string) (*ast.BlockStmt, error) {
 
 	for _, decl := range f.Decls {
 		if fn, ok := decl.(*ast.FuncDecl); ok {
-			//fmt.Printf("Function %s\n", fn.Name.Name)
-			//ast.Print(fset, fn.Body)
 			return fn.Body, nil
 		}
 	}
@@ -145,7 +142,7 @@ func parseFile(filePath string) (*ast.File, error) {
 	if err != nil {
 		filePath = filex.GetAbs(filePath)
 		if file, err1 = parser.ParseFile(fset, filePath, nil, parser.ParseComments); err1 != nil {
-			return nil, err
+			return nil, err1
 		}
 		return file, nil
 	}
@@ -155,9 +152,4 @@ func parseFile(filePath string) (*ast.File, error) {
 func parseString(txt string) (*ast.File, error) {
 	fset := token.NewFileSet()
 	return parser.ParseFile(fset, "", txt, parser.ParseComments)
-}
-
-func modifyMethod(node *ast.FuncDecl, newBody *ast.BlockStmt) *ast.FuncDecl {
-	node.Body = newBody
-	return node
 }

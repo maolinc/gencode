@@ -11,7 +11,7 @@ func (l *Update{{.CamelName}}Logic) Update{{.CamelName}}(req *types.Update{{.Cam
 	var data model.{{.CamelName}}
 	_ = copier.Copiers(&data, req)
 
-	err = l.svcCtx.{{.CamelName}}Model.Update(l.ctx, nil, &data)
+	err = l.svcCtx.{{.CamelName}}Model.Update(l.ctx, &data)
 	if err != nil {
 		return nil, errors.Wrapf(errors.New("operate fail"), "Update{{.CamelName}} req: %v, error: %v", req, err)
 	}

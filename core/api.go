@@ -125,15 +125,17 @@ func (s *ApiSchema) Generate() error {
 		}
 	}
 	log.Println("api success!")
+	exec.Command("gofmt", "-s", "-w", s.OutPath).Run()
 
 	return nil
 }
 
 type Tp struct {
-	IsCache    bool
-	Package    string
-	ModelPkg   string
-	SourcePath string
+	IsCache     bool
+	Package     string
+	ModelPkg    string
+	SourcePath  string
+	PrimaryFmtV string
 	*Table
 	Dataset *Dataset
 }
@@ -149,6 +151,9 @@ const (
 )
 
 func (s *ApiSchema) GenerateCrud(modelPath string) error {
+	if s.Switch != switch_file_cmd {
+		return nil
+	}
 	module, path := filex.GetModule(modelPath)
 	modelPkg := module + "/" + strings.TrimPrefix(path, "/")
 	modelPkg = "\"" + modelPkg + "\""
@@ -168,19 +173,37 @@ func (s *ApiSchema) GenerateCrud(modelPath string) error {
 		return err
 	}
 
+	pfv := func(t Table) string {
+		var v string
+		for _, field := range t.Fields {
+			if field.IsPrimary {
+				v = v + " , req." + field.CamelName
+			}
+		}
+		return strings.TrimLeft(v, " ,")
+	}
+
 	for _, table := range s.TableSet {
 		t := Tp{
-			IsCache:    s.IsCache,
-			Package:    strings.ToLower(table.CamelName),
-			ModelPkg:   modelPkg,
-			Table:      table,
-			SourcePath: s.OutPath + "/internal/logic/" + strings.ToLower(table.CamelName),
+			IsCache:     s.IsCache,
+			Package:     strings.ToLower(table.CamelName),
+			ModelPkg:    modelPkg,
+			PrimaryFmtV: pfv(*table),
+			Table:       table,
+			SourcePath:  s.OutPath + "/internal/logic/" + strings.ToLower(table.CamelName),
 		}
-		err := s.doGenerateCrud(template, &t)
+		// not primary don‘t gen
+		if t.PrimaryFmtV == "" {
+			continue
+		}
+		err := doGenerateCrud(template, &t, s.GoZeroStyle)
 		if err != nil {
 			return err
 		}
 	}
+
+	exec.Command("gofmt", "-s", "-w", s.OutPath).Run()
+
 	return nil
 }
 
@@ -192,20 +215,29 @@ func (s *ApiSchema) genSvc(template *template.Template, modelPkg string) error {
 		SourcePath: s.OutPath + "/internal/svc",
 		Dataset:    s.Dataset,
 	}
-	err := s.crud(template, &t, "ServiceContext.go", svcTpl)
+	buf := new(bytes.Buffer)
+	err := template.ExecuteTemplate(buf, strings.TrimLeft(svcTpl, "/"), t)
 	if err != nil {
 		return err
 	}
+
+	// Append to the original file
+	path := t.SourcePath + "/" + getRealNameByStyle("ServiceContext.go", s.GoZeroStyle)
+	err = filex.AppendToFile(path, buf.Bytes())
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (s *ApiSchema) doGenerateCrud(template *template.Template, tp *Tp) error {
+func doGenerateCrud(template *template.Template, tp *Tp, style string) error {
 	file := tp.CamelName
 	mp := map[string]string{"Create" + file: createTpl, "Update" + file: updateTpl, "Delete" + file: deleteTpl,
 		file + "Detail": detailTpl, file + "Page": pageTpl}
 
 	for f, t := range mp {
-		err := s.crud(template, tp, f+"Logic.go", t)
+		err := crud(template, tp, getRealNameByStyle(f+"Logic.go", style), t)
 		if err != nil {
 			return err
 		}
@@ -213,16 +245,7 @@ func (s *ApiSchema) doGenerateCrud(template *template.Template, tp *Tp) error {
 	return nil
 }
 
-func (s *ApiSchema) crud(template *template.Template, tp *Tp, file string, tpl string) error {
-	switch s.GoZeroStyle {
-	case "gozero":
-		file = stringx.From(file).Lower()
-	case "go_zero":
-		file = stringx.From(file).ToSnake()
-	default:
-		file = stringx.From(file).ToCamelWithStartLower()
-	}
-
+func crud(template *template.Template, tp *Tp, file string, tpl string) error {
 	buf := new(bytes.Buffer)
 	err := template.ExecuteTemplate(buf, strings.TrimLeft(tpl, "/"), *tp)
 	if err != nil {
@@ -236,6 +259,18 @@ func (s *ApiSchema) crud(template *template.Template, tp *Tp, file string, tpl s
 	}
 
 	return nil
+}
+
+func getRealNameByStyle(name, style string) string {
+	switch style {
+	case "gozero":
+		name = stringx.From(name).Lower()
+	case "go_zero":
+		name = stringx.From(name).ToSnake()
+	default:
+		name = stringx.From(name).ToCamelWithStartLower()
+	}
+	return name
 }
 
 func (s *ApiSchema) genCommon(template *template.Template) error {

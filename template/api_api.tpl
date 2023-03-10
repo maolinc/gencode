@@ -27,11 +27,11 @@ service {{$serviceName}} {
 
     @doc "删除{{.CamelName}}"
     @handler Delete{{.CamelName}}
-    post /delete (IdsReq) returns (Delete{{.CamelName}}Resp)
+    post /delete (Delete{{.CamelName}}Req) returns (Delete{{.CamelName}}Resp)
 
     @doc "查询{{.CamelName}}详情"
     @handler {{.CamelName}}Detail
-    post /detail (IdReq) returns (Detail{{.CamelName}}Resp)
+    post /detail (Detail{{.CamelName}}Req) returns (Detail{{.CamelName}}Resp)
 
 	@doc "分页查询{{.CamelName}}"
 	@handler {{.CamelName}}Page

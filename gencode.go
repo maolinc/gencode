@@ -12,11 +12,6 @@ var dir embed.FS
 func main() {
 	var err error
 
-	err = checkTemplate()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	jsonConfig := getDefaultConfig()
 	err = parseFlag(jsonConfig)
 	if err != nil {
@@ -34,7 +29,14 @@ func main() {
 
 	gencode.Generates(apiSchema, protoSchema, modelSchema)
 
+	apiSchema.IsCache = modelSchema.IsCache
 	err = apiSchema.GenerateCrud(modelSchema.OutPath)
+	if err != nil {
+		log.Println(err)
+	}
+
+	protoSchema.IsCache = modelSchema.IsCache
+	err = protoSchema.GenerateCrud(modelSchema.OutPath)
 	if err != nil {
 		log.Println(err)
 	}

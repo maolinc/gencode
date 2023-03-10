@@ -40,6 +40,21 @@ func CopyDirEm(dir embed.FS, toDir string, file string) (err error) {
 	return nil
 }
 
+func AppendToFile(filename string, byte []byte) error {
+	// 以只写的模式，打开文件
+	f, err := os.OpenFile(filename, os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	} else {
+		// 查找文件末尾的偏移量
+		n, _ := f.Seek(0, io.SeekEnd)
+		// 从末尾的偏移量开始写入内容
+		_, err = f.WriteAt(byte, n)
+	}
+	defer f.Close()
+	return err
+}
+
 func CopyDir(fromDir, toDir string) (err error) {
 	fileFrom, err := os.Open(fromDir)
 	if err != nil {

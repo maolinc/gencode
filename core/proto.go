@@ -3,9 +3,11 @@ package gencode
 import (
 	"bytes"
 	"fmt"
+	"github.com/maolinc/gencode/tools/filex"
 	"log"
 	"os/exec"
 	"strings"
+	"text/template"
 )
 
 var _ Generate = (*ProtoSchema)(nil)
@@ -97,6 +99,7 @@ func (s *ProtoSchema) Generate() error {
 		}
 	}
 	log.Println("proto success!")
+	exec.Command("gofmt", "-s", "-w", s.OutPath).Run()
 
 	return nil
 }
@@ -130,4 +133,95 @@ func NewProtoSchema(dataset *Dataset, config *ProtoConfig, opts ...ProtoOption) 
 	}
 
 	return s
+}
+
+const (
+	createTplP = "/proto_create.tpl"
+	updateTplP = "/proto_update.tpl"
+	detailTplP = "/proto_detail.tpl"
+	deleteTplP = "/proto_delete.tpl"
+	pageTplP   = "/proto_page.tpl"
+
+	svcTplP = "/api_svc.tpl"
+)
+
+func (s *ProtoSchema) GenerateCrud(modelPath string) error {
+	if s.Switch != switch_file_cmd {
+		return nil
+	}
+	module, path := filex.GetModule(modelPath)
+	modelPkg := module + "/" + strings.TrimPrefix(path, "/")
+	modelPkg = "\"" + modelPkg + "\""
+
+	createPath := s.TemplateFilePath + createTplP
+	updatePath := s.TemplateFilePath + updateTplP
+	detailPath := s.TemplateFilePath + detailTplP
+	deleteTPath := s.TemplateFilePath + deleteTplP
+	pagePath := s.TemplateFilePath + pageTplP
+
+	svcPath := s.TemplateFilePath + svcTplP
+
+	template := WithTemplate(createPath, updatePath, detailPath, deleteTPath, pagePath, svcPath)
+
+	err := s.genSvc(template, modelPkg)
+	if err != nil {
+		return err
+	}
+
+	//pfv := func(t Table) string {
+	//	var v string
+	//	for _, field := range t.Fields {
+	//		if field.IsPrimary {
+	//			v = v + " , in." + field.CamelName
+	//		}
+	//	}
+	//	return strings.TrimLeft(v, " ,")
+	//}
+	//
+	//for _, table := range s.TableSet {
+	//	t := Tp{
+	//		IsCache:     s.IsCache,
+	//		Package:     strings.ToLower(table.CamelName),
+	//		ModelPkg:    modelPkg,
+	//		PrimaryFmtV: pfv(*table),
+	//		Table:       table,
+	//		SourcePath:  s.OutPath + "/internal/logic/" + strings.ToLower(table.CamelName),
+	//	}
+	//	// not primary don‘t gen
+	//	if t.PrimaryFmtV == "" {
+	//		continue
+	//	}
+	//	err := doGenerateCrud(template, &t, s.GoZeroStyle)
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
+
+	exec.Command("gofmt", "-s", "-w", s.OutPath).Run()
+
+	return nil
+}
+
+func (s *ProtoSchema) genSvc(template *template.Template, modelPkg string) error {
+	t := Tp{
+		IsCache:    s.IsCache,
+		Package:    "svc",
+		ModelPkg:   modelPkg,
+		SourcePath: s.OutPath + "/internal/svc",
+		Dataset:    s.Dataset,
+	}
+	buf := new(bytes.Buffer)
+	err := template.ExecuteTemplate(buf, strings.TrimLeft(svcTplP, "/"), t)
+	if err != nil {
+		return err
+	}
+
+	// Append to the original file
+	path := t.SourcePath + "/" + getRealNameByStyle("ServiceContext.go", s.GoZeroStyle)
+	err = filex.AppendToFile(path, buf.Bytes())
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

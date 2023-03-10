@@ -29,8 +29,19 @@ type Update{{.CamelName}}Req {
 type Update{{.CamelName}}Resp {
 }
 
+
+type Delete{{.CamelName}}Req {
+{{range  .Fields -}}{{if .IsPrimary}}    {{.CamelName}} {{.DataType}} `json:"{{.StyleName}}"` //{{.Comment}}
+{{end -}}
+{{end -}}}
+
 type Delete{{.CamelName}}Resp {
 }
+
+type Detail{{.CamelName}}Req {
+{{range  .Fields -}}{{if .IsPrimary}}    {{.CamelName}} {{.DataType}} `json:"{{.StyleName}}"` //{{.Comment}}
+{{end -}}
+{{end -}}}
 
 type Detail{{.CamelName}}Resp {
     {{.CamelName}}View

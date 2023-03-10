@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+
 func (l *{{.CamelName}}PageLogic) {{.CamelName}}Page(req *types.Search{{.CamelName}}Req) (resp *types.Search{{.CamelName}}Resp, err error) {
 
 	var cond model.{{.CamelName}}Query

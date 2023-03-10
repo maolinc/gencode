@@ -1,4 +1,4 @@
-{{ $PrimaryField := toCamelWithStartLower .Primary.CamelName }}
+
 package model
 
 import (
@@ -9,7 +9,7 @@ import (
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	{{end -}}
 	"gorm.io/gorm"
-	"time"
+	{{if .IsDate}}"time"{{end -}}
 )
 
 var (
@@ -26,18 +26,18 @@ type (
     	// Trans Transaction
         Trans(ctx context.Context, fn func(ctx context.Context, db *gorm.DB) (err error)) (err error)
     	// Builder Custom assembly conditions
-    	Builder(ctx context.Context) (b *gorm.DB)
-    	Insert(ctx context.Context, db *gorm.DB, data *{{.CamelName}}) (err error)
-    	Update(ctx context.Context, db *gorm.DB, data *{{.CamelName}}) (err error)
+    	Builder(ctx context.Context, db ...*gorm.DB) (b *gorm.DB)
+    	Insert(ctx context.Context, data *{{.CamelName}}, db ...*gorm.DB) (err error)
+    	Update(ctx context.Context, data *{{.CamelName}}, db ...*gorm.DB) (err error)
     	// Delete When a tombstone field is set, it is tombstone. Otherwise, it is physically deleted
-    	Delete(ctx context.Context, db *gorm.DB, {{$PrimaryField}} {{.Primary.DataType}}) (err error)
+    	Delete(ctx context.Context, {{.PrimaryFields}}, db ...*gorm.DB) (err error)
     	// ForceDelete Physical deletion
-    	ForceDelete(ctx context.Context, db *gorm.DB, {{$PrimaryField}} {{.Primary.DataType}}) (err error)
+    	ForceDelete(ctx context.Context, {{.PrimaryFields}}, db ...*gorm.DB) (err error)
     	Count(ctx context.Context, cond *{{.CamelName}}Query) (total int64, err error)
-    	FindOne(ctx context.Context, {{$PrimaryField}} {{.Primary.DataType}}) (data *{{.CamelName}}, err error)
+    	FindOne(ctx context.Context, {{.PrimaryFields}}) (data *{{.CamelName}}, err error)
     	// FindListByPage Normal pagination
     	FindListByPage(ctx context.Context, cond *{{.CamelName}}Query) (list []*{{.CamelName}}, err error)
-    	// FindListByCursor Cursor is required based on cursor paging
+    	// FindListByCursor Cursor is required based on cursor paging, Only the primary key is of type int, and other types can be expanded by themselves
     	FindListByCursor(ctx context.Context, cond *{{.CamelName}}Query) (list []*{{.CamelName}}, err error)
     	FindAll(ctx context.Context, cond *{{.CamelName}}Query) (list []*{{.CamelName}}, err error)
     	// ---------------Write your other interfaces below---------------
@@ -56,56 +56,56 @@ func New{{.CamelName}}Model(db *gorm.DB {{- if .IsCache}}, c cache.CacheConf{{en
 	}
 }
 
-func (m *default{{.CamelName}}Model) conn(ctx context.Context, db *gorm.DB) *gorm.DB {
-	if db == nil {
+func (m *default{{.CamelName}}Model) conn(ctx context.Context, db ...*gorm.DB) *gorm.DB {
+	if len(db) == 0 {
 		return m.db.Table(m.table).Session(&gorm.Session{Context: ctx})
 	}
-	return db
+	return db[0]
 }
 
-func (m *default{{.CamelName}}Model) Builder(ctx context.Context) (b *gorm.DB) {
-	return m.conn(ctx, nil)
+func (m *default{{.CamelName}}Model) Builder(ctx context.Context, db ...*gorm.DB) (b *gorm.DB) {
+	return m.conn(ctx, db...)
 }
 
 func (m *default{{.CamelName}}Model) Trans(ctx context.Context, fn func(ctx context.Context, db *gorm.DB) (err error)) (err error) {
-	return m.conn(ctx, nil).Transaction(func(tx *gorm.DB) error {
+	return m.conn(ctx).Transaction(func(tx *gorm.DB) error {
 		return fn(ctx, tx)
 	})
 }
 
-func (m *default{{.CamelName}}Model) Insert(ctx context.Context, db *gorm.DB, data *{{.CamelName}}) (err error) {
+func (m *default{{.CamelName}}Model) Insert(ctx context.Context, data *{{.CamelName}}, db ...*gorm.DB) (err error) {
 	{{if .IsCache -}}
-	cacheKey := fmt.Sprintf("%s%v", cache{{.CamelName}}PrimaryPrefix, data.{{$PrimaryField}})
+	cacheKey := fmt.Sprintf("%s{{.PrimaryFmt}}", cache{{.CamelName}}PrimaryPrefix, {{.PrimaryFmtV}})
 	{{end -}}
 	return m.Exec(ctx, func() error {
-		return m.conn(ctx, db).Create(data).Error
+		return m.conn(ctx, db...).Create(data).Error
 	} {{- if .IsCache}}, cacheKey{{end}})
 }
 
-func (m *default{{.CamelName}}Model) Update(ctx context.Context, db *gorm.DB, data *{{.CamelName}}) (err error) {
+func (m *default{{.CamelName}}Model) Update(ctx context.Context, data *{{.CamelName}}, db ...*gorm.DB) (err error) {
 	{{if .IsCache -}}
-	cacheKey := fmt.Sprintf("%s%v", cache{{.CamelName}}PrimaryPrefix, data.{{$PrimaryField}})
+	cacheKey := fmt.Sprintf("%s{{.PrimaryFmt}}", cache{{.CamelName}}PrimaryPrefix, {{.PrimaryFmtV}})
 	{{end -}}
 	return m.Exec(ctx, func() error {
-		return m.conn(ctx, db).Updates(data).Error
+		return m.conn(ctx, db...).Updates(data).Error
 	} {{- if .IsCache}}, cacheKey{{end}})
 }
 
-func (m *default{{.CamelName}}Model) Delete(ctx context.Context, db *gorm.DB, {{$PrimaryField}} {{.Primary.DataType}}) (err error) {
+func (m *default{{.CamelName}}Model) Delete(ctx context.Context, {{.PrimaryFields}}, db ...*gorm.DB) (err error) {
 	{{if .IsCache -}}
-	cacheKey := fmt.Sprintf("%s%v", cache{{.CamelName}}PrimaryPrefix, {{$PrimaryField}})
+	cacheKey := fmt.Sprintf("%s{{.PrimaryFmt}}", cache{{.CamelName}}PrimaryPrefix, {{.PrimaryFmtV2}})
 	{{end -}}
 	return m.Exec(ctx, func() error {
-		return m.conn(ctx, db).Delete({{$PrimaryField}}).Error
+		return m.conn(ctx, db...).Where("{{.PrimaryFieldWhere}}", {{.PrimaryFmtV2}}).Delete({{.CamelName}}{}).Error
 	} {{- if .IsCache}}, cacheKey{{end}})
 }
 
-func (m *default{{.CamelName}}Model) ForceDelete(ctx context.Context, db *gorm.DB, {{$PrimaryField}} {{.Primary.DataType}}) (err error) {
+func (m *default{{.CamelName}}Model) ForceDelete(ctx context.Context, {{.PrimaryFields}}, db ...*gorm.DB) (err error) {
 	{{if .IsCache -}}
-	cacheKey := fmt.Sprintf("%s%v", cache{{.CamelName}}PrimaryPrefix, {{$PrimaryField}})
+	cacheKey := fmt.Sprintf("%s{{.PrimaryFmt}}", cache{{.CamelName}}PrimaryPrefix, {{.PrimaryFmtV2}})
 	{{end -}}
 	return m.Exec(ctx, func() error {
-		return m.conn(ctx, db).Unscoped().Delete({{$PrimaryField}}).Error
+		return m.conn(ctx, db...).Unscoped().Where("{{.PrimaryFieldWhere}}", {{.PrimaryFmtV2}}).Delete({{.CamelName}}{}).Error
 	} {{- if .IsCache}}, cacheKey{{end}})
 }
 
@@ -114,12 +114,12 @@ func (m *default{{.CamelName}}Model) Count(ctx context.Context, cond *{{.CamelNa
 	return total, err
 }
 
-func (m *default{{.CamelName}}Model) FindOne(ctx context.Context, {{$PrimaryField}} {{.Primary.DataType}}) (data *{{.CamelName}}, err error) {
+func (m *default{{.CamelName}}Model) FindOne(ctx context.Context, {{.PrimaryFields}}) (data *{{.CamelName}}, err error) {
 	{{if .IsCache -}}
-	cacheKey := fmt.Sprintf("%s%v", cache{{.CamelName}}PrimaryPrefix, {{$PrimaryField}})
+	cacheKey := fmt.Sprintf("%s{{.PrimaryFmt}}", cache{{.CamelName}}PrimaryPrefix, {{.PrimaryFmtV2}})
     {{end -}}
 	err = m.QueryRow(ctx, &data, func(v interface{}) error {
-		tx := m.conn(ctx, nil).Find(v, {{$PrimaryField}})
+		tx := m.conn(ctx).Where("{{.PrimaryFieldWhere}}", {{.PrimaryFmtV2}}).Find(v)
 		if tx.RowsAffected == 0 {
 			return sql.ErrNoRows
 		}
@@ -136,7 +136,7 @@ func (m *default{{.CamelName}}Model) FindOne(ctx context.Context, {{$PrimaryFiel
 }
 
 func (m *default{{.CamelName}}Model) FindListByPage(ctx context.Context, cond *{{.CamelName}}Query) (list []*{{.CamelName}}, err error) {
-	conn := m.conn(ctx, nil)
+	conn := m.conn(ctx)
 	conn = conn.Scopes(
 		orderScope(cond.OrderSort...),
 		pageScope(cond.PageCurrent, cond.PageSize),
@@ -146,7 +146,7 @@ func (m *default{{.CamelName}}Model) FindListByPage(ctx context.Context, cond *{
 }
 
 func (m *default{{.CamelName}}Model) FindListByCursor(ctx context.Context, cond *{{.CamelName}}Query) (list []*{{.CamelName}}, err error) {
-	conn := m.conn(ctx, nil)
+	conn := m.conn(ctx)
 	conn = conn.Scopes(
 		cursorScope(cond.Cursor, cond.CursorAsc, cond.PageSize, "{{.Primary.Name}}"),
 		orderScope(cond.OrderSort...),
@@ -156,7 +156,7 @@ func (m *default{{.CamelName}}Model) FindListByCursor(ctx context.Context, cond 
 }
 
 func (m *default{{.CamelName}}Model) FindAll(ctx context.Context, cond *{{.CamelName}}Query) (list []*{{.CamelName}}, err error) {
-	conn := m.conn(ctx, nil)
+	conn := m.conn(ctx)
 	conn = conn.Scopes(
 		orderScope(cond.OrderSort...),
 	)

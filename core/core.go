@@ -19,7 +19,10 @@ const (
 )
 
 var (
-	DefaultIgnoreFileValue = map[string]int64{"create_time": 3, "create_at": 3, "update_time": 3, "update_by": 3, "delete_flag": 7, "del_flag": 7, "create_by": 3}
+	DefaultIgnoreFileValue = map[string]int64{
+		"create_time": 3, "create_at": 3, "create_by": 3, "update_time": 3, "update_at": 3, "update_by": 3,
+		"delete_flag": 7, "del_flag": 7, "del_state": 7, "delete_time": 7, "del_time": 7, "delete_at": 7,
+	}
 )
 
 type Generate interface {
@@ -145,6 +148,7 @@ func (d *Dataset) Session(config *SessionConfig) *Dataset {
 	} else {
 		newDataset.SessionConfig.TemplateFilePath = filex.GetHomeDir() + "/" + TemplatePath
 	}
+	newDataset.SessionConfig.IsCache = config.IsCache
 
 	// copy tableSet and filter field
 	tableSet := make([]*Table, 0)

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/maolinc/gencode/core"
 	"github.com/maolinc/gencode/tools/filex"
+	"log"
 	"os"
 	"strings"
 )
@@ -20,10 +21,15 @@ type JsonConfig struct {
 
 func getDefaultConfig() *JsonConfig {
 	jsonConfig := &JsonConfig{
-		DBConfig:     &gencode.DBConfig{},
-		GlobalConfig: &gencode.Config{},
-		ApiConfig:    &gencode.ApiSchema{Dataset: &gencode.Dataset{SessionConfig: &gencode.SessionConfig{}}, ApiConfig: &gencode.ApiConfig{}},
-		ProtoConfig:  &gencode.ProtoSchema{Dataset: &gencode.Dataset{SessionConfig: &gencode.SessionConfig{}}, ProtoConfig: &gencode.ProtoConfig{}},
+		DBConfig: &gencode.DBConfig{
+			DbType: "mysql",
+		},
+		GlobalConfig: &gencode.Config{
+			FieldStyle: "mLc",
+		},
+		ApiConfig:   &gencode.ApiSchema{Dataset: &gencode.Dataset{SessionConfig: &gencode.SessionConfig{}}, ApiConfig: &gencode.ApiConfig{Switch: "A"}},
+		ProtoConfig: &gencode.ProtoSchema{Dataset: &gencode.Dataset{SessionConfig: &gencode.SessionConfig{}}, ProtoConfig: &gencode.ProtoConfig{Switch: "A"}},
+		ModelConfig: &gencode.ModelSchema{Dataset: &gencode.Dataset{SessionConfig: &gencode.SessionConfig{}}, ModelConfig: &gencode.ModelConfig{Switch: "A"}},
 	}
 	return jsonConfig
 }
@@ -32,6 +38,11 @@ func parseFlag(jsonConfig *JsonConfig) (err error) {
 	templateFlag := flag.String("t", "", "input 'init', init template file")
 	configFlag := flag.String("f", "genConfig.json", "json config file")
 	flag.Parse()
+
+	err = checkTemplate()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if *templateFlag == "init" {
 		if err := initTemplate(); err != nil {

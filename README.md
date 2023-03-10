@@ -1,21 +1,93 @@
-# generatecode
-根据sql语句快速生成protobuf、api等文件, 会根据表字段约束自动设置tag里面的default、range、optional; 当Switch选择B时生成的代码文件会根据表分目录
+## 功能
+1. 根据sql语句快速生成protobuf、api文件
+2. 根据表字段约束自动设置api文件tag的default、optional
+3. 会生成自己定义model, 目前基于gorm生成model层, 支持缓存
+4. 生成api层的crud, rpc层的进行中
+5. 生成的代码文件会根据表分目录
 
-# 1.安装
+## 使用
+安装
 ```shell
 go install github.com/maolinc/gencode@latest
 ```
-
-# 2.运行
+运行
 ```shell
 gencode -f="genConfig.json" 
 ```
--f 指定配置文件路径
+-f 指定配置文件路径, 不指定, 则在当前文件下找genConfig.json文件
 
-# 部分生成的代码
-![img.png](img.png)
+## 部分生成的代码
 
-# genConfig.json解释
+
+## genConfig.json字段详解
+[查看]((#comment1))
+
+## 最简配置
+只需配置数据库，默认会生成api文件,proto文件,model层（基于gorm）  （Switch默认为A）
+```json
+{
+  "DBConfig": {
+    "DbType": "mysql",
+    "DBName": "koala",
+    "Host": "127.0.0.1",
+    "Port": 3306,
+    "User": "root",
+    "Password": "123456"
+  }
+}
+```
+
+## 去注释全配置
+[查看]((#fullCommment))
+
+
+## 注意
+- 生成crud时需要手动在config里面添加连接配置, 如下
+- 在svc目录的serviceContext中追加依赖, 手动复制合并
+- 只会对有主键的表生成crud操作
+
+```go
+type Config struct {
+	rest.RestConf
+	DB struct {
+		DataSource string
+	}
+	Cache cache.CacheConf
+}
+```
+
+## IgnoreFieldValue
+```shell
+IgnoreFieldValue: 类型字典{K:V}结构,K-string,V-int, 可以灵活控制字段在创建、更新、查询时是否显示
+K对应字段, V对应字段值
+默认值：{"create_time": 3, "create_at": 3, "create_by": 3, "update_time": 3, "update_at": 3, "update_by": 3,
+		"delete_flag": 7, "del_flag": 7, "del_state": 7, "delete_time": 7, "del_time": 7, "delete_at": 7,}
+V显示规则: 1(create), 2(update),4(select),8(delete), 1+2=3(create,update)
+          1+2+4=7(create,select,update)
+根据1、2、4、8进行组合就行
+
+举个例子: 
+对于sys_user表, 结构看下面的sql
+如果不想delete_flag字段在创建、查询、更新的结构体存在, 可写 {"delete_flag":7}
+如果不想create_time和update_time字段在创建、更新的结构体存在, 可写 {"create_time":3, "update_time":3}
+如果不想password字段在查询的结构体存在, 可写 {"password":4}
+
+这么做的原因是借助二进制进行控制
+// false->ignore  true->show  eg:2 & 7 = 010 & 111 = 010= 2==0=false ignore
+```
+```sql
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '用户ID',
+  `password` varchar(100) DEFAULT '' COMMENT '密码',
+  `delete_flag` int(11) DEFAULT '0' COMMENT '删除标志（0代表存在 1代表删除）',
+  `login_ip` varchar(128) DEFAULT '' COMMENT '最后登录IP',
+  `login_date` datetime DEFAULT NULL COMMENT '最后登录时间',
+  `create_by` varchar(64) DEFAULT '' COMMENT '创建者',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_by` varchar(64) DEFAULT '' COMMENT '更新者',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  `salt` varchar(128) NOT NULL COMMENT '加密盐',
+```
+<a id="comment1">genConfig配置详解</a>
 ```js
 {
   "DBConfig": { //数据库配置
@@ -33,9 +105,9 @@ gencode -f="genConfig.json"
     "IgnoreTables": [], //需要忽略的表  eg:["sys_post"]
     "IgnoreFields": [], //忽略字段  eg:["delete_flag", "update_time"]
     "IgnoreMap": {} //可指定某表中忽略某些字段,  eg:{"sys_role":["delete_flag","create_time"], "sys_user":["password"]}
-  },
+    },
   "ApiConfig": { //api文件生成配置, 替换GlobalConfig中重复字段
-    "Switch": "A", //开关选择, A:只生成api文件, B:生成api文件并执行goctl api命令,  不填则不会生成api文件
+    "Switch": "A", //开关选择, A:只生成api文件, B:生成api层的crud,会自动先执行goctl api,  非AB则不会生成api文件
     "GoZeroStyle": "", //指定goctl命令中的style
     "DateStyle": "", //控制日期类型格式, 可选：string、number, 默认number对于的日期格式为int64
     "ServiceName": "", //服务名字, 默认为GlobalConfig中ServiceName
@@ -48,7 +120,7 @@ gencode -f="genConfig.json"
     "IgnoreFieldValue": {} //控制字段在创建、更新、查询时是否显示, 具体规则见下面
   },
   "ProtoConfig":{  //proto文件生成配置, 替换GlobalConfig中重复字段
-    "Switch": "A", //开关选择, A:只生成proto文件, B:生成proto文件并执行goctl rpc命令,  不填则不会生成proto文件
+    "Switch": "A", //开关选择, A:只生成proto文件,  B:生成rpc层的crud,会自动先执行goctl rpc,  非AB则不会生成任何文件
     "GoZeroStyle": "", //指定goctl命令中的style
     "DateStyle": "", //控制日期类型格式, 可选：string、number, 默认number对于的日期格式为int64
     "ServiceName": "", //服务名字, 默认为GlobalConfig中ServiceName
@@ -57,31 +129,17 @@ gencode -f="genConfig.json"
     "Package": "", //proto文件的package
     "OutPath": "", //指定proto文件生成输出路径, 默认会在当前路径生成rpc文件夹
     "IgnoreFieldValue": {} //控制字段在创建、更新、查询时是否显示, 具体规则见下面
+  },
+  "ModelConfig": {
+     "Switch": "A",
+     "OutPath": "",
+     "Tables": [],
+     "IsCache": false //生成crud逻辑是否带缓存
   }
 }
 ```
 
-# 最简配置
-```json
-{
-  "DBConfig": {
-    "DbType": "mysql",
-    "DBName": "koala",
-    "Host": "127.0.0.1",
-    "Port": 3306,
-    "User": "root",
-    "Password": "123456"
-  },
-  "ApiConfig": {
-    "Switch": "A"
-  },
-  "ProtoConfig": {
-    "Switch": "A"
-  }
-}
-```
-
-# 去注释全配置
+<a id="fullCommment">去注释全配置</a>
 ```json
 {
   "DBConfig": {
@@ -123,41 +181,15 @@ gencode -f="genConfig.json"
     "Package": "",
     "OutPath": "",
     "IgnoreFieldValue": {}
+  },
+  "ModelConfig": {
+    "Switch": "A",
+    "OutPath": "",
+    "Tables": [],
+    "IsCache": false 
   }
 }
 ```
 
-# IgnoreFieldValue
-```shell
-IgnoreFieldValue: 类型字典{K:V}结构,K-string,V-int, 可以灵活控制字段在创建、更新、查询时是否显示
-K对应字段, V对应字段值
-默认值：{"create_time": 3, "create_at": 3, "update_time": 3, "update_by": 3, "delete_flag": 7, "del_flag": 7, "create_by": 3}
-V显示规则: 1(create), 2(update),4(select),8(delete), 1+2=3(create,update)
-          1+2+4=7(create,select,update)
-根据1、2、4、8进行组合就行
-
-举个例子: 
-对于sys_user表, 结构看下面的sql
-如果不想delete_flag字段在创建、查询、更新的结构体存在, 可写 {"delete_flag":7}
-如果不想create_time和update_time字段在创建、更新的结构体存在, 可写 {"create_time":3, "update_time":3}
-如果不想password字段在查询的结构体存在, 可写 {"password":4}
-
-这么做的原因是借助二进制进行控制
-// false->ignore  true->show  eg:2 & 7 = 010 & 111 = 010= 2==0=false ignore
-```
-```sql
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '用户ID',
-  `password` varchar(100) DEFAULT '' COMMENT '密码',
-  `delete_flag` int(11) DEFAULT '0' COMMENT '删除标志（0代表存在 1代表删除）',
-  `login_ip` varchar(128) DEFAULT '' COMMENT '最后登录IP',
-  `login_date` datetime DEFAULT NULL COMMENT '最后登录时间',
-  `create_by` varchar(64) DEFAULT '' COMMENT '创建者',
-  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
-  `update_by` varchar(64) DEFAULT '' COMMENT '更新者',
-  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
-  `salt` varchar(128) NOT NULL COMMENT '加密盐',
-```
-
-
-# 其他
+## 其他
 1. 查询sql部分参考了https://github.com/Mikaelemmmm/sql2pb
