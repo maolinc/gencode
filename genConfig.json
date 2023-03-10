@@ -1,16 +1,16 @@
 {
   "DBConfig": {
     "DbType": "mysql",
-    "DBName": "yxs_mall",
-    "Host": "47.108.48.183",
+    "DBName": "",
+    "Host": "",
     "Port": 3306,
-    "User": "root",
-    "Password": "201314cml@CML"
+    "User": "",
+    "Password": ""
   },
   "GlobalConfig": {
     "FieldStyle": "",
-    "ServiceName": "mall",
-    "Tables": ["mall_product"],
+    "ServiceName": "",
+    "Tables": [],
     "IsCache": true
   },
   "ApiConfig": {
@@ -30,7 +30,7 @@
   "ModelConfig": {
     "Switch": "A",
     "IsCache": true,
-    "Tables": ["mall_product"],
+    "Tables": [],
     "OutPath": "app/model"
   }
 }
