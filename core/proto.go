@@ -34,6 +34,7 @@ type ProtoConfig struct {
 	GoPackage   string
 	Package     string
 	GoZeroStyle string
+	ModelPath   string
 }
 
 type ProtoOption func(schema *ProtoSchema)
@@ -87,7 +88,7 @@ func (s *ProtoSchema) Generate() error {
 
 	if s.Switch == switch_file_cmd {
 		protoPath := fmt.Sprintf("%s/%s.proto", s.OutPath, s.ServiceName)
-		rpcCmd := fmt.Sprintf("rpc protoc %s --go_out=%s/pb --go-grpc_out=%s/pb --zrpc_out=%s -m=true --style=%s", protoPath, s.OutPath, s.OutPath, s.OutPath, s.GoZeroStyle)
+		rpcCmd := fmt.Sprintf("rpc protoc %s --go_out=%s/pb --go-grpc_out=%s/pb --zrpc_out=%s -m=true --style=%s --home=C:\\Users\\maolin.chen\\.goctl\\1.5.0", protoPath, s.OutPath, s.OutPath, s.OutPath, s.GoZeroStyle)
 		args := strings.Split(rpcCmd, " ")
 		cmd := exec.Command("goctl", args...)
 		out := bytes.Buffer{}
@@ -97,6 +98,8 @@ func (s *ProtoSchema) Generate() error {
 		if err != nil {
 			return err
 		}
+
+		err = s.GenerateCrud()
 	}
 	log.Println("proto success!")
 	exec.Command("gofmt", "-s", "-w", s.OutPath).Run()
@@ -145,11 +148,8 @@ const (
 	svcTplP = "/api_svc.tpl"
 )
 
-func (s *ProtoSchema) GenerateCrud(modelPath string) error {
-	if s.Switch != switch_file_cmd {
-		return nil
-	}
-	module, path := filex.GetModule(modelPath)
+func (s *ProtoSchema) GenerateCrud() error {
+	module, path := filex.GetModule(s.ModelPath)
 	modelPkg := module + "/" + strings.TrimPrefix(path, "/")
 	modelPkg = "\"" + modelPkg + "\""
 
@@ -168,37 +168,51 @@ func (s *ProtoSchema) GenerateCrud(modelPath string) error {
 		return err
 	}
 
-	//pfv := func(t Table) string {
-	//	var v string
-	//	for _, field := range t.Fields {
-	//		if field.IsPrimary {
-	//			v = v + " , in." + field.CamelName
-	//		}
-	//	}
-	//	return strings.TrimLeft(v, " ,")
-	//}
-	//
-	//for _, table := range s.TableSet {
-	//	t := Tp{
-	//		IsCache:     s.IsCache,
-	//		Package:     strings.ToLower(table.CamelName),
-	//		ModelPkg:    modelPkg,
-	//		PrimaryFmtV: pfv(*table),
-	//		Table:       table,
-	//		SourcePath:  s.OutPath + "/internal/logic/" + strings.ToLower(table.CamelName),
-	//	}
-	//	// not primary don‘t gen
-	//	if t.PrimaryFmtV == "" {
-	//		continue
-	//	}
-	//	err := doGenerateCrud(template, &t, s.GoZeroStyle)
-	//	if err != nil {
-	//		return err
-	//	}
-	//}
+	pfv := func(t Table) string {
+		var v string
+		for _, field := range t.Fields {
+			if field.IsPrimary {
+				v = v + " , in." + field.CamelName
+			}
+		}
+		return strings.TrimLeft(v, " ,")
+	}
+
+	for _, table := range s.TableSet {
+		t := Tp{
+			IsCache:     s.IsCache,
+			Package:     strings.ToLower(table.CamelName) + "logic",
+			ModelPkg:    modelPkg,
+			PrimaryFmtV: pfv(*table),
+			Table:       table,
+			SourcePath:  s.OutPath + "/internal/logic/" + strings.ToLower(table.CamelName),
+		}
+		// not primary don‘t gen
+		if t.PrimaryFmtV == "" {
+			continue
+		}
+		err := doGenerateCrudProto(template, &t, s.GoZeroStyle)
+		if err != nil {
+			return err
+		}
+	}
 
 	exec.Command("gofmt", "-s", "-w", s.OutPath).Run()
 
+	return nil
+}
+
+func doGenerateCrudProto(template *template.Template, tp *Tp, style string) error {
+	file := tp.CamelName
+	mp := map[string]string{"Create" + file: createTplP, "Update" + file: updateTplP, "Delete" + file: deleteTplP,
+		"Detail" + file: detailTplP, "Page" + file: pageTplP}
+
+	for f, t := range mp {
+		err := crud(template, tp, getRealNameByStyle(f+"Logic.go", style), t)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -218,6 +232,7 @@ func (s *ProtoSchema) genSvc(template *template.Template, modelPkg string) error
 
 	// Append to the original file
 	path := t.SourcePath + "/" + getRealNameByStyle("ServiceContext.go", s.GoZeroStyle)
+
 	err = filex.AppendToFile(path, buf.Bytes())
 	if err != nil {
 		return err

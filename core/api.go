@@ -35,6 +35,7 @@ type ApiConfig struct {
 	Author      string
 	Email       string
 	Version     string
+	ModelPath   string
 }
 
 type ApiOption func(schema *ApiSchema)
@@ -123,6 +124,8 @@ func (s *ApiSchema) Generate() error {
 		if err != nil {
 			return err
 		}
+
+		err = s.GenerateCrud()
 	}
 	log.Println("api success!")
 	exec.Command("gofmt", "-s", "-w", s.OutPath).Run()
@@ -150,11 +153,8 @@ const (
 	svcTpl = "/api_svc.tpl"
 )
 
-func (s *ApiSchema) GenerateCrud(modelPath string) error {
-	if s.Switch != switch_file_cmd {
-		return nil
-	}
-	module, path := filex.GetModule(modelPath)
+func (s *ApiSchema) GenerateCrud() error {
+	module, path := filex.GetModule(s.ModelPath)
 	modelPkg := module + "/" + strings.TrimPrefix(path, "/")
 	modelPkg = "\"" + modelPkg + "\""
 
@@ -234,7 +234,7 @@ func (s *ApiSchema) genSvc(template *template.Template, modelPkg string) error {
 func doGenerateCrud(template *template.Template, tp *Tp, style string) error {
 	file := tp.CamelName
 	mp := map[string]string{"Create" + file: createTpl, "Update" + file: updateTpl, "Delete" + file: deleteTpl,
-		file + "Detail": detailTpl, file + "Page": pageTpl}
+		"Detail" + file: detailTpl, "Page" + file: pageTpl}
 
 	for f, t := range mp {
 		err := crud(template, tp, getRealNameByStyle(f+"Logic.go", style), t)

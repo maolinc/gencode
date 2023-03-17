@@ -6,17 +6,17 @@ import (
 )
 
 
-func (l *Detail{{.CamelName}}Logic) Detail{{.CamelName}}(req *types.Delete{{.CamelName}}Req) (resp *types.Detail{{.CamelName}}Resp, err error) {
+func (l *Detail{{.CamelName}}Logic) Detail{{.CamelName}}(in *pb.Detail{{.CamelName}}Req) (*pb.Detail{{.CamelName}}Resp, error) {
 
 	data, err := l.svcCtx.{{.CamelName}}Model.FindOne(l.ctx, {{.PrimaryFmtV}})
 	if err != nil {
-		return nil, errors.Wrapf(errors.New("operate fail"), "{{.CamelName}}Detail req: %v, error: %v", req, err)
+		return nil, errors.Wrapf(errors.New("operate fail"), "{{.CamelName}}Detail req: %v, error: %v", in, err)
 	}
 	if data == nil {
 		return nil, errors.New("resource not exist")
 	}
 
-	resp = &types.Detail{{.CamelName}}Resp{}
+	resp := &pb.Detail{{.CamelName}}Resp{}
 	_ = copier.Copiers(&resp, data)
 
 	return resp, nil

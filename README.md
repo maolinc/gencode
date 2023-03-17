@@ -2,7 +2,7 @@
 1. 根据sql语句快速生成protobuf、api文件
 2. 根据表字段约束自动设置api文件tag的default、optional
 3. 会生成自己定义model, 目前基于gorm生成model层, 支持缓存
-4. 生成api层的crud, rpc层的进行中
+4. 生成api层的crud, rpc层
 5. 生成的代码文件会根据表分目录
 
 ## 使用
@@ -16,14 +16,14 @@ gencode -f="genConfig.json"
 ```
 -f 指定配置文件路径, 不指定, 则在当前文件下找genConfig.json文件
 
-## 部分生成的代码
+## [生成展示](#image)
 
 
 ## genConfig.json字段详解
 [查看]((#comment1))
 
-## 最简配置
-只需配置数据库，默认会生成api文件,proto文件,model层（基于gorm）  （Switch默认为A）
+## genConfig.json最简配置
+只需配置数据库，默认会生成api文件,proto文件,model层（基于gorm）  （Switch默认全为为A）
 ```json
 {
   "DBConfig": {
@@ -42,7 +42,7 @@ gencode -f="genConfig.json"
 
 
 ## 注意
-- 生成crud时需要手动在config里面添加连接配置, 如下
+- 生成crud之后需要手动在config里面添加连接配置, 如下
 - 在svc目录的serviceContext中追加依赖, 手动复制合并
 - 只会对有主键的表生成crud操作
 
@@ -55,6 +55,14 @@ type Config struct {
 	Cache cache.CacheConf
 }
 ```
+- 对于model需要额为添加信息可支持逻辑删除、创建更新时间, 如下：具体查看gorm规则
+
+```go
+DeleteFlag soft_delete.DeletedAt `gorm:"column:delete_flag;softDelete:flag"` // 删除标志（0代表存在 1代表删除）
+CreateTime *time.Time            `gorm:"column:create_time;autoCreateTime"`  // 创建时间
+UpdateTime *time.Time            `gorm:"column:update_time;autoUpdateTime"`  // 更新时间
+```
+
 
 ## IgnoreFieldValue
 ```shell
@@ -87,7 +95,8 @@ V显示规则: 1(create), 2(update),4(select),8(delete), 1+2=3(create,update)
   `update_time` datetime DEFAULT NULL COMMENT '更新时间',
   `salt` varchar(128) NOT NULL COMMENT '加密盐',
 ```
-<a id="comment1">genConfig配置详解</a>
+
+<a id="comment1"></a>genConfig配置详解
 ```js
 {
   "DBConfig": { //数据库配置
@@ -139,7 +148,8 @@ V显示规则: 1(create), 2(update),4(select),8(delete), 1+2=3(create,update)
 }
 ```
 
-<a id="fullCommment">去注释全配置</a>
+<a id="fullCommment"></a>去注释全配置
+
 ```json
 {
   "DBConfig": {
@@ -190,6 +200,12 @@ V显示规则: 1(create), 2(update),4(select),8(delete), 1+2=3(create,update)
   }
 }
 ```
+
+<a id="image"></a>
+效果图
+- model
+
+![img.png](img.png)
 
 ## 其他
 1. 查询sql部分参考了https://github.com/Mikaelemmmm/sql2pb

@@ -27,23 +27,20 @@ service {{.CamelName}}{
 message IdReq {
     int64 id = 1; //id
 }
-
 message IdsReq {
     int64 ids = 1; //ids
 }
 
-message PlusItem {
-    repeated string item = 1;
+message SearchItem {
+    string field=1; // 字段
+    string value=2; // 值
+    string type=3; // 值的数据类型 number string date numberArray stringArray
+    string operator=4; // 操作符 = != > >= 包含 不包含...
+    string logic=5; // 逻辑符 and | or
 }
-
-message SearchBase {
-    optional string keyword = 1; // 关键字
-    optional int64 cursor = 2; // 分页游标
-    optional bool cursorAsc = 3; // 游标分页时方向 true:asc  false:desc
-    optional int64 pageSize = 4; // 每页条数
-    optional int64 pageCurrent = 5;  // 当前页
-    repeated string orderSort = 6;  // 排序 eg： ["create_time asc", "id desc"]
-    repeated PlusItem searchPlus = 7; // 加强版搜索参数  eg: [["p_id", "=", "a", "string"], ["complete_time", ">=", "1674373544","number"]]
+message SearchGroup {
+    repeated SearchItem group=1; // 条件组合
+    string logic=2; // 逻辑符 and | or
 }
 
 
@@ -55,7 +52,7 @@ message {{.CamelName}}View {
 {{end -}}}
 
 message Create{{.CamelName}}Req {
-{{range $index,$value := .Fields}}{{if isIgnore 1 .IgnoreValue}}    {{if .IsNullable -}}optional {{end}}{{.DataType}} {{toCamelWithStartLower .CamelName}} = {{add $index 1}}; //{{.Comment}}
+{{range $index,$value := .Fields}}{{if isIgnore 1 .IgnoreValue}}    {{.DataType}} {{toCamelWithStartLower .CamelName}} = {{add $index 1}}; //{{.Comment}}
 {{end -}}
 {{end -}}}
 
@@ -63,7 +60,7 @@ message Create{{.CamelName}}Resp {
 }
 
 message Update{{.CamelName}}Req {
-{{range $index,$value := .Fields}}{{if isIgnore 2 .IgnoreValue}}    {{if .IsNullable -}}optional {{end}}{{.DataType}} {{toCamelWithStartLower .CamelName}} = {{add $index 1}}; //{{.Comment}}
+{{range $index,$value := .Fields}}{{if isIgnore 2 .IgnoreValue}}    {{.DataType}} {{toCamelWithStartLower .CamelName}} = {{add $index 1}}; //{{.Comment}}
 {{end -}}
 {{end -}}}
 
@@ -89,8 +86,13 @@ message Detail{{.CamelName}}Resp {
 {{end -}}}
 
 message Search{{.CamelName}}Req {
-    SearchBase baseCond = 1; // 基本查询参数
-{{range $index,$value := .Fields}}    {{.DataType}} {{toCamelWithStartLower .CamelName}} = {{add $index 2}}; //{{.Comment}}
+    int64 cursor = 1; // 分页游标
+    bool cursorAsc = 2; // 游标分页时方向 true:asc  false:desc
+    int64 pageSize = 3; // 每页条数
+    int64 pageCurrent = 4;  // 当前页
+    repeated string orderSort = 5;  // 排序 eg： ["create_time asc", "id desc"]
+    repeated SearchGroup searchPlus = 6; // 加强版搜索参数
+{{range $index,$value := .Fields}}    {{.DataType}} {{toCamelWithStartLower .CamelName}} = {{add $index 8}}; //{{.Comment}}
 {{end}}}
 
 message Search{{.CamelName}}Resp {

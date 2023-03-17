@@ -138,6 +138,7 @@ func (m *default{{.CamelName}}Model) FindOne(ctx context.Context, {{.PrimaryFiel
 func (m *default{{.CamelName}}Model) FindListByPage(ctx context.Context, cond *{{.CamelName}}Query) (list []*{{.CamelName}}, err error) {
 	conn := m.conn(ctx)
 	conn = conn.Scopes(
+	    searchPlusScope(cond.SearchPlus),
 		orderScope(cond.OrderSort...),
 		pageScope(cond.PageCurrent, cond.PageSize),
 	)
@@ -148,6 +149,7 @@ func (m *default{{.CamelName}}Model) FindListByPage(ctx context.Context, cond *{
 func (m *default{{.CamelName}}Model) FindListByCursor(ctx context.Context, cond *{{.CamelName}}Query) (list []*{{.CamelName}}, err error) {
 	conn := m.conn(ctx)
 	conn = conn.Scopes(
+	    searchPlusScope(cond.SearchPlus),
 		cursorScope(cond.Cursor, cond.CursorAsc, cond.PageSize, "{{.Primary.Name}}"),
 		orderScope(cond.OrderSort...),
 	)

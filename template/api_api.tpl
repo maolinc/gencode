@@ -30,11 +30,11 @@ service {{$serviceName}} {
     post /delete (Delete{{.CamelName}}Req) returns (Delete{{.CamelName}}Resp)
 
     @doc "查询{{.CamelName}}详情"
-    @handler {{.CamelName}}Detail
+    @handler Detail{{.CamelName}}
     post /detail (Detail{{.CamelName}}Req) returns (Detail{{.CamelName}}Resp)
 
 	@doc "分页查询{{.CamelName}}"
-	@handler {{.CamelName}}Page
+	@handler Page{{.CamelName}}
 	post /page (Search{{.CamelName}}Req) returns (Search{{.CamelName}}Resp)
 
 	@doc "更新{{.CamelName}}"

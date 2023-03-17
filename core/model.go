@@ -3,17 +3,20 @@ package gencode
 import (
 	"bytes"
 	"fmt"
+	"github.com/maolinc/gencode/tools/filex"
 	"github.com/maolinc/gencode/tools/stringx"
 	"log"
+	"os"
 	"os/exec"
 	"strings"
 	"text/template"
 )
 
 const (
-	modelModel  = "/model_model.tpl"
-	modelSchema = "/model_schema.tpl"
-	modelTyps   = "/model_typs.tpl"
+	modelModel   = "/model_model.tpl"
+	modelSchema  = "/model_schema.tpl"
+	modelTyps    = "/model_typs.tpl"
+	modelComTyps = "/model_typs_common.tpl"
 )
 
 type ModelSchema struct {
@@ -51,8 +54,10 @@ func (m *ModelSchema) Generate() (err error) {
 
 	schemaPath := m.TemplateFilePath + modelSchema
 	typesPath := m.TemplateFilePath + modelTyps
+	typesCommonPath := m.TemplateFilePath + modelComTyps
 	modelPath := m.TemplateFilePath + modelModel
-	t := WithTemplate(schemaPath, typesPath, modelPath)
+
+	t := WithTemplate(schemaPath, typesPath, modelPath, typesCommonPath)
 
 	err = m.genSchema(t)
 	if err != nil {
@@ -101,13 +106,22 @@ func (m *ModelSchema) genSchema(template *template.Template) error {
 
 func (m *ModelSchema) genTypes(template *template.Template) error {
 	buf := new(bytes.Buffer)
+	path := m.OutPath + "/typs.go"
 
 	err := template.ExecuteTemplate(buf, strings.TrimLeft(modelTyps, "/"), *m)
 	if err != nil {
 		return err
 	}
 
-	return CreateAndWriteFile(m.OutPath, "typs.go", buf.String())
+	exists, err := filex.PathExists(path)
+	if err != nil || !exists {
+		common, err := os.ReadFile(m.TemplateFilePath + modelComTyps)
+		if err != nil {
+			return err
+		}
+		return CreateAndWriteFile(m.OutPath, "typs.go", string(append(common, buf.Bytes()...)))
+	}
+	return filex.AppendToFile(path, buf.Bytes())
 }
 
 func (m *ModelSchema) genModel(template *template.Template) error {

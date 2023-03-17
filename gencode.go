@@ -20,24 +20,17 @@ func main() {
 
 	dataset := gencode.From(jsonConfig.DBConfig, jsonConfig.GlobalConfig)
 
-	apiSchema := gencode.NewApiSchema(dataset.Session(jsonConfig.ApiConfig.SessionConfig), jsonConfig.ApiConfig.ApiConfig)
-
-	protoSchema := gencode.NewProtoSchema(dataset.Session(jsonConfig.ProtoConfig.SessionConfig), jsonConfig.ProtoConfig.ProtoConfig)
-
 	//jsonConfig.ModelConfig.DBConfig = jsonConfig.DBConfig
 	modelSchema := gencode.NewModelSchema(dataset.Session(jsonConfig.ModelConfig.SessionConfig), jsonConfig.ModelConfig.ModelConfig)
 
+	jsonConfig.ApiConfig.ModelPath = jsonConfig.ModelConfig.OutPath
+	jsonConfig.ApiConfig.IsCache = modelSchema.IsCache
+	apiSchema := gencode.NewApiSchema(dataset.Session(jsonConfig.ApiConfig.SessionConfig), jsonConfig.ApiConfig.ApiConfig)
+
+	jsonConfig.ProtoConfig.ModelPath = jsonConfig.ModelConfig.OutPath
+	jsonConfig.ProtoConfig.IsCache = modelSchema.IsCache
+	protoSchema := gencode.NewProtoSchema(dataset.Session(jsonConfig.ProtoConfig.SessionConfig), jsonConfig.ProtoConfig.ProtoConfig)
+
 	gencode.Generates(apiSchema, protoSchema, modelSchema)
 
-	apiSchema.IsCache = modelSchema.IsCache
-	err = apiSchema.GenerateCrud(modelSchema.OutPath)
-	if err != nil {
-		log.Println(err)
-	}
-
-	protoSchema.IsCache = modelSchema.IsCache
-	err = protoSchema.GenerateCrud(modelSchema.OutPath)
-	if err != nil {
-		log.Println(err)
-	}
 }

@@ -7,7 +7,7 @@ import (
 )
 
 
-func (l *{{.CamelName}}PageLogic) {{.CamelName}}Page(req *types.Search{{.CamelName}}Req) (resp *types.Search{{.CamelName}}Resp, err error) {
+func (l *Page{{.CamelName}}Logic) Page{{.CamelName}}(req *types.Search{{.CamelName}}Req) (resp *types.Search{{.CamelName}}Resp, err error) {
 
 	var cond model.{{.CamelName}}Query
 	_ = copier.Copiers(&cond, req)

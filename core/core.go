@@ -414,6 +414,14 @@ func CreateAndWriteFile(fileP, fileN, context string) error {
 	return nil
 }
 
+func CreateAndWriteFileAppend(fileP, fileN, context string) error {
+	exists, err := filex.PathExists(fileP + "/" + fileN)
+	if err != nil || !exists {
+		return CreateAndWriteFile(fileP, fileN, context)
+	}
+	return filex.AppendToFile(fileP+"/"+fileN, []byte(context))
+}
+
 func getStyleName(style styleType, name string) string {
 	if Style_Snake == style {
 		return stringx.From(name).ToSnake()
