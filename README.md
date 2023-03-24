@@ -20,7 +20,7 @@ gencode -f="genConfig.json"
 
 
 ## genConfig.json字段详解
-[查看]((#comment1))
+[查看](#comment1)
 
 ## genConfig.json最简配置
 只需配置数据库，默认会生成api文件,proto文件,model层（基于gorm）  （Switch默认全为为A）
@@ -38,7 +38,7 @@ gencode -f="genConfig.json"
 ```
 
 ## 去注释全配置
-[查看]((#fullCommment))
+[查看](#fullCommment)
 
 
 ## 注意
