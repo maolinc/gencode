@@ -35,6 +35,8 @@ type (
     	ForceDelete(ctx context.Context, {{.PrimaryFields}}, db ...*gorm.DB) (err error)
     	Count(ctx context.Context, cond *{{.CamelName}}Query) (total int64, err error)
     	FindOne(ctx context.Context, {{.PrimaryFields}}) (data *{{.CamelName}}, err error)
+    	// FindByPage Contains total information
+    	FindByPage(ctx context.Context, cond *{{.CamelName}}Query) (total int64, list []*{{.CamelName}}, err error)
     	// FindListByPage Normal pagination
     	FindListByPage(ctx context.Context, cond *{{.CamelName}}Query) (list []*{{.CamelName}}, err error)
     	// FindListByCursor Cursor is required based on cursor paging, Only the primary key is of type int, and other types can be expanded by themselves
@@ -110,8 +112,10 @@ func (m *default{{.CamelName}}Model) ForceDelete(ctx context.Context, {{.Primary
 }
 
 func (m *default{{.CamelName}}Model) Count(ctx context.Context, cond *{{.CamelName}}Query) (total int64, err error) {
-	err = m.conn(ctx, nil).Where(cond.{{.CamelName}}).Count(&total).Error
-	return total, err
+    err = m.conn(ctx, nil).Scopes(
+        searchPlusScope(cond.SearchPlus, m.table),
+    ).Where(cond.{{.CamelName}}).Count(&total).Error
+    return total, err
 }
 
 func (m *default{{.CamelName}}Model) FindOne(ctx context.Context, {{.PrimaryFields}}) (data *{{.CamelName}}, err error) {
@@ -135,10 +139,22 @@ func (m *default{{.CamelName}}Model) FindOne(ctx context.Context, {{.PrimaryFiel
 	}
 }
 
+func (m *default{{.CamelName}}Model) FindByPage(ctx context.Context, cond *{{.CamelName}}Query) (total int64, list []*{{.CamelName}}, err error) {
+	conn := m.conn(ctx).Scopes(
+		searchPlusScope(cond.SearchPlus, m.table),
+	).Where(cond.{{.CamelName}})
+
+	conn.Count(&total)
+	err = conn.Scopes(
+		pageScope(cond.PageCurrent, cond.PageSize),
+		orderScope(cond.OrderSort...),
+	).Find(&list).Error
+	return total, list, err
+}
+
 func (m *default{{.CamelName}}Model) FindListByPage(ctx context.Context, cond *{{.CamelName}}Query) (list []*{{.CamelName}}, err error) {
-	conn := m.conn(ctx)
-	conn = conn.Scopes(
-	    searchPlusScope(cond.SearchPlus),
+	conn := m.conn(ctx).Scopes(
+	    searchPlusScope(cond.SearchPlus, m.table),
 		orderScope(cond.OrderSort...),
 		pageScope(cond.PageCurrent, cond.PageSize),
 	)
@@ -147,9 +163,8 @@ func (m *default{{.CamelName}}Model) FindListByPage(ctx context.Context, cond *{
 }
 
 func (m *default{{.CamelName}}Model) FindListByCursor(ctx context.Context, cond *{{.CamelName}}Query) (list []*{{.CamelName}}, err error) {
-	conn := m.conn(ctx)
-	conn = conn.Scopes(
-	    searchPlusScope(cond.SearchPlus),
+	conn := m.conn(ctx).Scopes(
+	    searchPlusScope(cond.SearchPlus, m.table),
 		cursorScope(cond.Cursor, cond.CursorAsc, cond.PageSize, "{{.Primary.Name}}"),
 		orderScope(cond.OrderSort...),
 	)
@@ -158,8 +173,7 @@ func (m *default{{.CamelName}}Model) FindListByCursor(ctx context.Context, cond 
 }
 
 func (m *default{{.CamelName}}Model) FindAll(ctx context.Context, cond *{{.CamelName}}Query) (list []*{{.CamelName}}, err error) {
-	conn := m.conn(ctx)
-	conn = conn.Scopes(
+	conn := m.conn(ctx).Scopes(
 		orderScope(cond.OrderSort...),
 	)
 	err = conn.Where(cond.{{.CamelName}}).Find(&list).Error

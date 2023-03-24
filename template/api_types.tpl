@@ -1,9 +1,9 @@
-{{ $prefix := .Prefix }}
+{{ $prefix := .Prefix }} {{ $serviceName := .ServiceName }}
 syntax = "{{.Syntax}}"
 
 info(
-	title: "{{.CamelName}}类型"
-	desc: "{{.Comment}}的类型"
+	title: "{{.CamelName}}"
+	desc: "{{.Comment}}"
 	author: "{{.Author}}"
 	email: "{{.Email}}"
 	version: "{{.Version}}"
@@ -12,6 +12,43 @@ info(
 import (
     "types/common.api"
 )
+
+//-----------------------{{.CamelName}}的接口-----------------------
+@server(
+	prefix: {{$prefix}}/{{.CamelName}}
+	group: {{toLower .CamelName}}
+)
+service {{$serviceName}} {
+	@doc "添加{{.CamelName}}"
+	@handler Create{{.CamelName}}
+	post /create (Create{{.CamelName}}Req) returns (Create{{.CamelName}}Resp)
+
+    @doc "删除{{.CamelName}}"
+    @handler Delete{{.CamelName}}
+    post /delete (Delete{{.CamelName}}Req) returns (Delete{{.CamelName}}Resp)
+
+    @doc "查询{{.CamelName}}详情"
+    @handler Detail{{.CamelName}}
+    post /detail (Detail{{.CamelName}}Req) returns (Detail{{.CamelName}}Resp)
+
+	@doc "分页查询{{.CamelName}}"
+	@handler Page{{.CamelName}}
+	post /page (Search{{.CamelName}}Req) returns (Search{{.CamelName}}Resp)
+
+	@doc "更新{{.CamelName}}"
+	@handler Update{{.CamelName}}
+	post /update (Update{{.CamelName}}Req) returns (Update{{.CamelName}}Resp)
+}
+
+
+//-----------------------请求、响应数据-----------------------
+
+type {{.CamelName}}View {
+{{range  .Fields -}}{{if isIgnore 4 .IgnoreValue}}    {{.CamelName}} {{.DataType}} `json:"{{.StyleName}}"` //{{.Comment}}
+{{end -}}
+{{end -}}
+}
+
 
 type Create{{.CamelName}}Req {
 {{- range  .Fields -}}{{if isIgnore 1 .IgnoreValue}}    {{if not .IsPrimary}} {{.CamelName}} {{.DataType}} `json:"{{.StyleName}}{{- if .HasDefault -}},default={{.Default}}{{end}}{{- if .IsNullable -}},optional{{end}}"` //{{.Comment}} {{end}}

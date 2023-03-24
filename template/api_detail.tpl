@@ -6,7 +6,7 @@ import (
 )
 
 
-func (l *Detail{{.CamelName}}Logic) Detail{{.CamelName}}(req *types.Delete{{.CamelName}}Req) (resp *types.Detail{{.CamelName}}Resp, err error) {
+func (l *Detail{{.CamelName}}Logic) Detail{{.CamelName}}(req *types.Detail{{.CamelName}}Req) (resp *types.Detail{{.CamelName}}Resp, err error) {
 
 	data, err := l.svcCtx.{{.CamelName}}Model.FindOne(l.ctx, {{.PrimaryFmtV}})
 	if err != nil {

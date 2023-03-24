@@ -1,6 +1,7 @@
 package model
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"errors"
@@ -119,14 +120,19 @@ func orderScope(sorts ...string) func(db *gorm.DB) *gorm.DB {
 
 ]
 */
-func searchPlusScope(plus []SearchGroup) func(db *gorm.DB) *gorm.DB {
-	query := ""
-	queryArgs := make([]any, 0)
+func searchPlusScope(plus []SearchGroup, tableName string) func(db *gorm.DB) *gorm.DB {
+	var (
+		query     = bytes.Buffer{}
+		subQ      = bytes.Buffer{}
+		queryArgs = make([]any, 0)
+		h         = false
+		//k         = false
+	)
+
 	return func(db *gorm.DB) *gorm.DB {
-		h := false
 		for _, group := range plus {
-			k := false
-			subQ := ""
+			//k = false
+			subQ.Reset()
 			for _, searchItem := range group.Group {
 				if searchItem.Field == "" {
 					continue
@@ -135,7 +141,6 @@ func searchPlusScope(plus []SearchGroup) func(db *gorm.DB) *gorm.DB {
 				var (
 					v     any
 					err   error
-					oper  = operator
 					logic = getLogic(searchItem.Logic)
 				)
 
@@ -170,32 +175,34 @@ func searchPlusScope(plus []SearchGroup) func(db *gorm.DB) *gorm.DB {
 					continue
 				}
 
-				oper = getOperator(operator, typ)
-
-				if !k {
-					k = true
-					subQ = fmt.Sprintf("%s %s ?", searchItem.Field, oper)
-					queryArgs = append(queryArgs, v)
-				} else {
-					subQ = fmt.Sprintf("%s %s %s %s ?", subQ, logic, searchItem.Field, oper)
-					queryArgs = append(queryArgs, v)
+				if subQ.Len() != 0 {
+					fmt.Fprintf(&subQ, " %s ", logic)
 				}
+                if searchItem.Table == "" {
+                    fmt.Fprintf(&subQ, "`%s`.`%s` %s ?", tableName, searchItem.Field, getOperator(operator, typ))
+                } else {
+                    fmt.Fprintf(&subQ, "`%s`.`%s` %s ?", searchItem.Table, searchItem.Field, getOperator(operator, typ))
+                }
+				queryArgs = append(queryArgs, v)
 			}
-			if subQ == "" {
+			if subQ.Len() == 0 {
 				continue
 			}
-			if query == "" {
-				query = fmt.Sprintf("( %s )", subQ)
-			} else {
+			if query.Len() != 0 {
 				h = true
-				query = fmt.Sprintf("%s %s ( %s )", query, getLogic(group.Logic), subQ)
+				fmt.Fprintf(&query, " %s ", getLogic(group.Logic))
 			}
+			query.WriteString("( ")
+			query.Write(subQ.Bytes())
+			query.WriteString(" )")
 		}
-		if !h {
-			query = strings.TrimSuffix(strings.TrimPrefix(query, "("), ")")
+		if !h && query.Len() != 0 {
+			b := query.Bytes()
+			return db.Where(string(b[2:len(b)-2]), queryArgs...)
+
 		}
 
-		return db.Where(query, queryArgs...)
+		return db.Where(query.String(), queryArgs...)
 	}
 }
 

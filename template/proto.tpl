@@ -37,6 +37,7 @@ message SearchItem {
     string type=3; // 值的数据类型 number string date numberArray stringArray
     string operator=4; // 操作符 = != > >= 包含 不包含...
     string logic=5; // 逻辑符 and | or
+    string table=6; // 表
 }
 message SearchGroup {
     repeated SearchItem group=1; // 条件组合

@@ -1,6 +1,7 @@
 package model
 
 type SearchItem struct {
+    Table    string `json:"table"`
 	Field    string `json:"field"`          // 字段
 	Value    string `json:"value"`          // 值
 	Type     string `json:"type"`           // 值的数据类型 number string date numberArray stringArray

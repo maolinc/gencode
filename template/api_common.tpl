@@ -10,6 +10,7 @@ info(
 )
 
 type SearchItem {
+    Table string `json:"table,optional"` //表
     Field string `json:"field"` // 字段
     Value string `json:"value"` // 值
     Type string `json:"type"` // 值的数据类型 number string date numberArray stringArray
@@ -49,11 +50,3 @@ type (
         Ids []int64 `json:"ids"`
     }
 )
-
-{{range  .Dataset.TableSet}}
-type {{.CamelName}}View {
-{{range  .Fields -}}{{if isIgnore 4 .IgnoreValue}}    {{.CamelName}} {{.DataType}} `json:"{{.StyleName}},optional"` //{{.Comment}}
-{{end -}}
-{{end -}}
-}
-{{end}}
