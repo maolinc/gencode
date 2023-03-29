@@ -14,8 +14,15 @@ go install github.com/maolinc/gencode@latest
 ```shell
 gencode -f="genConfig.json" 
 ```
--f 指定配置文件路径, 不指定, 则在当前文件下找genConfig.json文件
+-f 指定配置文件路径, 不指定, 则在当前文件下找genConfig.json文件, -t=init重置模板
 
+升级
+```shell
+go clean -i github.com/maolinc/gencode
+go install github.com/maolinc/gencode@latest
+
+重新install后, 执行gencode时需带上-t=init参数才会使用最新的模板
+```
 ## [生成展示](#image)
 
 
