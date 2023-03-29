@@ -383,9 +383,12 @@ func inSlice(slice []string, dest string) bool {
 	return false
 }
 
+func getTemplateFunMap() template.FuncMap {
+	return template.FuncMap{"add": add, "toCamelWithStartLower": toCamelWithStartLower, "toLower": toLower, "isIgnore": isIgnore}
+}
+
 func PareTemplate(fileName string, filePath string, data any, buffer *bytes.Buffer) error {
-	funcMap := template.FuncMap{"add": add, "toCamelWithStartLower": toCamelWithStartLower, "toLower": toLower, "isIgnore": isIgnore}
-	parseFiles, err := template.New(strings.TrimLeft(fileName, "/")).Funcs(funcMap).ParseFiles(filePath)
+	parseFiles, err := template.New(strings.TrimLeft(fileName, "/")).Funcs(getTemplateFunMap()).ParseFiles(filePath)
 	if err != nil {
 		return err
 	}
@@ -394,11 +397,23 @@ func PareTemplate(fileName string, filePath string, data any, buffer *bytes.Buff
 }
 
 func WithTemplate(filePaths ...string) *template.Template {
-	funcMap := template.FuncMap{"add": add, "toCamelWithStartLower": toCamelWithStartLower, "toLower": toLower, "isIgnore": isIgnore}
 	mt := template.Must(
-		template.New("").Funcs(funcMap).ParseFiles(filePaths...),
+		template.New("").Funcs(getTemplateFunMap()).ParseFiles(filePaths...),
 	)
 	return mt
+}
+
+func PareTextTemplate(textTpl string, data any, buffer *bytes.Buffer) error {
+	t := template.New("temp").Funcs(getTemplateFunMap())
+	parse, err := t.Parse(textTpl)
+	if err != nil {
+		return err
+	}
+	err = parse.Execute(buffer, data)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func CreateAndWriteFile(fileP, fileN, context string) error {

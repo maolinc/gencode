@@ -275,25 +275,41 @@ func getRealNameByStyle(name, style string) string {
 
 func (s *ApiSchema) genCommon(template *template.Template) error {
 	buf := new(bytes.Buffer)
+	fileP := fmt.Sprintf("%s/desc/%s", s.OutPath, "types")
 
-	err := template.ExecuteTemplate(buf, strings.TrimLeft(apiCommon, "/"), *s)
-	if err != nil {
-		return err
+	exists, err := filex.PathExists(fileP + "/common.api")
+	if err != nil || !exists {
+		err = template.ExecuteTemplate(buf, strings.TrimLeft(apiCommon, "/"), *s)
+		if err != nil {
+			return err
+		}
+		return CreateAndWriteFile(fileP, "common.api", buf.String())
 	}
 
-	fileP := fmt.Sprintf("%s/desc/%s", s.OutPath, "types")
-	return CreateAndWriteFile(fileP, "common.api", buf.String())
+	return nil
 }
 
 func (s *ApiSchema) genApi(template *template.Template) error {
 	buf := new(bytes.Buffer)
+	path := s.OutPath + "/desc/" + s.ServiceName + ".api"
+	exists, err := filex.PathExists(path)
+	if err != nil || !exists {
+		err = template.ExecuteTemplate(buf, strings.TrimLeft(apiApi, "/"), *s)
+		if err != nil {
+			return err
+		}
+		return CreateAndWriteFile(s.OutPath+"/desc", s.ServiceName+".api", buf.String())
+	}
 
-	err := template.ExecuteTemplate(buf, strings.TrimLeft(apiApi, "/"), *s)
+	importTemplate := `
+	import (
+	{{range .Dataset.TableSet}}    "types/{{toLower .CamelName}}.api"
+	{{end}})`
+	err = PareTextTemplate(importTemplate, *s, buf)
 	if err != nil {
 		return err
 	}
-
-	return CreateAndWriteFile(s.OutPath+"/desc", s.ServiceName+".api", buf.String())
+	return filex.AppendToFile(path, buf.Bytes())
 }
 
 func (s *ApiSchema) genTypes(template *template.Template) error {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/zeromicro/go-zero/core/stores/cache"
@@ -100,6 +101,21 @@ func orderScope(sorts ...string) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
+func pageHandler[T any](conn *gorm.DB, currentPage, sizePage int) (total int64, list []T, err error) {
+	//pC := make(chan int64)
+	//go func(con *gorm.DB) {
+	//	var count int64
+	//	con.Count(&count)
+	//	pC <- count
+	//}(conn)
+	//nConn := conn.Session(&gorm.Session{})
+	//err = nConn.Scopes(pageScope(currentPage, sizePage)).Find(&list).Error
+	//total = <-pC
+	conn.Count(&total)
+	err = conn.Scopes(pageScope(currentPage, sizePage)).Find(&list).Error
+	return total, list, err
+}
+
 /*
 [
 
@@ -126,18 +142,16 @@ func searchPlusScope(plus []SearchGroup, tableName string) func(db *gorm.DB) *go
 		subQ      = bytes.Buffer{}
 		queryArgs = make([]any, 0)
 		h         = false
-		//k         = false
 	)
 
 	return func(db *gorm.DB) *gorm.DB {
 		for _, group := range plus {
-			//k = false
 			subQ.Reset()
 			for _, searchItem := range group.Group {
 				if searchItem.Field == "" {
 					continue
 				}
-				value, typ, operator := searchItem.Value, strings.ToLower(searchItem.Type), searchItem.Operator
+				value, typ, operator := searchItem.Value, strings.ToLower(searchItem.Type), strings.ToLower(searchItem.Operator)
 				var (
 					v     any
 					err   error
@@ -147,26 +161,47 @@ func searchPlusScope(plus []SearchGroup, tableName string) func(db *gorm.DB) *go
 				switch typ {
 				case "number":
 					v, err = strconv.ParseInt(value, 10, 64)
+				case "float":
+					v, err = strconv.ParseFloat(value, 64)
 				case "date":
 					if v1, err := strconv.ParseInt(value, 10, 64); err == nil {
 						if t := time.Unix(v1, 0); err == nil {
 							v = t.String()
 						}
+						break
 					}
 					if t, err := time.Parse("2006-01-02 15:04:05", value); err == nil {
 						v = t.String()
 					}
 				case "string":
-					if operator == "包含" {
-						v = fmt.Sprintf("%%%v%%", value)
-					} else if operator == "不包含" {
-						v = fmt.Sprintf("%%%v%%", value)
+					if !strings.HasPrefix(value, "\"") {
+						// ”abc“ -> ""abc""
+						value = fmt.Sprintf("\"%s\"", value)
 					}
-					v = value
+					v, err = unmarshal[string](value)
+					if operator == "包含" || operator == "不包含" || operator == "like" || operator == "not like" {
+						v = fmt.Sprintf("%%%v%%", v)
+					}
 				case "stringarray":
-					v = strings.Split(value, ",")
+					if strings.HasPrefix(value, "[") {
+						//  "[”a”,“b”,“c“]"
+						v, err = unmarshal[[]string](value)
+					} else {
+						// "a,b,c"
+						v = strings.Split(value, ",")
+					}
 				case "numberarray":
-					v, _ = toNumberArray(value)
+					if !strings.HasPrefix(value, "[") {
+						// 1,2,3 -> "[1,2,3]"
+						value = fmt.Sprintf("[%s]", value)
+					}
+					v, err = unmarshal[[]int64](value)
+				case "floatarray":
+					if !strings.HasPrefix(value, "[") {
+						// 1,2,3.2 -> "[1,2,3.2]"
+						value = fmt.Sprintf("[%s]", value)
+					}
+					v, err = unmarshal[[]float64](value)
 				default:
 					v = value
 				}
@@ -178,11 +213,11 @@ func searchPlusScope(plus []SearchGroup, tableName string) func(db *gorm.DB) *go
 				if subQ.Len() != 0 {
 					fmt.Fprintf(&subQ, " %s ", logic)
 				}
-                if searchItem.Table == "" {
-                    fmt.Fprintf(&subQ, "`%s`.`%s` %s ?", tableName, searchItem.Field, getOperator(operator, typ))
-                } else {
-                    fmt.Fprintf(&subQ, "`%s`.`%s` %s ?", searchItem.Table, searchItem.Field, getOperator(operator, typ))
-                }
+				if searchItem.Table == "" {
+					fmt.Fprintf(&subQ, "`%s`.`%s` %s ?", tableName, searchItem.Field, getOperator(operator, typ))
+				} else {
+					fmt.Fprintf(&subQ, "`%s`.`%s` %s ?", searchItem.Table, searchItem.Field, getOperator(operator, typ))
+				}
 				queryArgs = append(queryArgs, v)
 			}
 			if subQ.Len() == 0 {
@@ -199,7 +234,6 @@ func searchPlusScope(plus []SearchGroup, tableName string) func(db *gorm.DB) *go
 		if !h && query.Len() != 0 {
 			b := query.Bytes()
 			return db.Where(string(b[2:len(b)-2]), queryArgs...)
-
 		}
 
 		return db.Where(query.String(), queryArgs...)
@@ -214,18 +248,6 @@ func getLogic(logic string) string {
 	return logic
 }
 
-func toNumberArray(strArr string) ([]int64, error) {
-	arr := make([]int64, 0)
-	for _, s := range strings.Split(strArr, ",") {
-		i, err := strconv.ParseInt(s, 10, 64)
-		if err != nil {
-			return arr, err
-		}
-		arr = append(arr, i)
-	}
-	return arr, nil
-}
-
 func getOperator(oper, typ string) string {
 	switch oper {
 	case "包含":
@@ -238,7 +260,12 @@ func getOperator(oper, typ string) string {
 			return "not like"
 		}
 		return "not in"
-
 	}
 	return oper
+}
+
+func unmarshal[T any](v string) (T, error) {
+	var t T
+	err := json.Unmarshal([]byte(v), &t)
+	return t, err
 }

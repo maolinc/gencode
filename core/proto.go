@@ -88,7 +88,7 @@ func (s *ProtoSchema) Generate() error {
 
 	if s.Switch == switch_file_cmd {
 		protoPath := fmt.Sprintf("%s/%s.proto", s.OutPath, s.ServiceName)
-		rpcCmd := fmt.Sprintf("rpc protoc %s --go_out=%s/pb --go-grpc_out=%s/pb --zrpc_out=%s -m=true --style=%s --home=C:\\Users\\maolin.chen\\.goctl\\1.5.0", protoPath, s.OutPath, s.OutPath, s.OutPath, s.GoZeroStyle)
+		rpcCmd := fmt.Sprintf("rpc protoc %s --go_out=%s/pb --go-grpc_out=%s/pb --zrpc_out=%s -m=true --style=%s", protoPath, s.OutPath, s.OutPath, s.OutPath, s.GoZeroStyle)
 		args := strings.Split(rpcCmd, " ")
 		cmd := exec.Command("goctl", args...)
 		out := bytes.Buffer{}

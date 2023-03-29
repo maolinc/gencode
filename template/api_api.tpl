@@ -1,7 +1,7 @@
 {{ $prefix := .Prefix }} {{ $serviceName := .ServiceName }}
 syntax = "{{.Syntax}}"
 
-info(
+info (
 	title: "{{$serviceName}}"
 	desc: "api入口文件"
 	author: "{{.Author}}"

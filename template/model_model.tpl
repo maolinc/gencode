@@ -22,6 +22,12 @@ type (
     {{range  .Fields}}    {{.CamelName}}  {{.DataType}}  `gorm:"{{.Name}} {{- if .IsPrimary}};primary_key{{end}}"` //{{.Comment}}
     {{end}}}
 
+    // {{.CamelName}} query cond
+    {{.CamelName}}Query struct {
+        SearchBase
+        {{.CamelName}}
+    }
+
     {{.CamelName}}Model interface {
     	// Trans Transaction
         Trans(ctx context.Context, fn func(ctx context.Context, db *gorm.DB) (err error)) (err error)
@@ -58,9 +64,13 @@ func New{{.CamelName}}Model(db *gorm.DB {{- if .IsCache}}, c cache.CacheConf{{en
 	}
 }
 
+func (m *{{.CamelName}}) TableName() string {
+	return "`{{.Name}}`"
+}
+
 func (m *default{{.CamelName}}Model) conn(ctx context.Context, db ...*gorm.DB) *gorm.DB {
 	if len(db) == 0 {
-		return m.db.Table(m.table).Session(&gorm.Session{Context: ctx})
+		return m.db.Model(&{{.CamelName}}{}).Session(&gorm.Session{Context: ctx})
 	}
 	return db[0]
 }
@@ -89,7 +99,7 @@ func (m *default{{.CamelName}}Model) Update(ctx context.Context, data *{{.CamelN
 	cacheKey := fmt.Sprintf("%s{{.PrimaryFmt}}", cache{{.CamelName}}PrimaryPrefix, {{.PrimaryFmtV}})
 	{{end -}}
 	return m.Exec(ctx, func() error {
-		return m.conn(ctx, db...).Updates(data).Error
+		return m.conn(ctx, db...).Model(&data).Updates(data).Error
 	} {{- if .IsCache}}, cacheKey{{end}})
 }
 
@@ -112,7 +122,7 @@ func (m *default{{.CamelName}}Model) ForceDelete(ctx context.Context, {{.Primary
 }
 
 func (m *default{{.CamelName}}Model) Count(ctx context.Context, cond *{{.CamelName}}Query) (total int64, err error) {
-    err = m.conn(ctx, nil).Scopes(
+    err = m.conn(ctx).Scopes(
         searchPlusScope(cond.SearchPlus, m.table),
     ).Where(cond.{{.CamelName}}).Count(&total).Error
     return total, err
@@ -144,11 +154,7 @@ func (m *default{{.CamelName}}Model) FindByPage(ctx context.Context, cond *{{.Ca
 		searchPlusScope(cond.SearchPlus, m.table),
 	).Where(cond.{{.CamelName}})
 
-	conn.Count(&total)
-	err = conn.Scopes(
-		pageScope(cond.PageCurrent, cond.PageSize),
-		orderScope(cond.OrderSort...),
-	).Find(&list).Error
+	total, list, err = pageHandler[*{{.CamelName}}](conn, cond.PageCurrent, cond.PageSize)
 	return total, list, err
 }
 
@@ -174,6 +180,7 @@ func (m *default{{.CamelName}}Model) FindListByCursor(ctx context.Context, cond 
 
 func (m *default{{.CamelName}}Model) FindAll(ctx context.Context, cond *{{.CamelName}}Query) (list []*{{.CamelName}}, err error) {
 	conn := m.conn(ctx).Scopes(
+	    searchPlusScope(cond.SearchPlus, m.table),
 		orderScope(cond.OrderSort...),
 	)
 	err = conn.Where(cond.{{.CamelName}}).Find(&list).Error

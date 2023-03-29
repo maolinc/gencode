@@ -1,7 +1,7 @@
 
 syntax = "{{.Syntax}}"
 
-info(
+info (
 	title: "view"
 	desc: "抽取类型,方便在其他api使用"
 	author: "{{.Author}}"

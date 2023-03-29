@@ -108,11 +108,6 @@ func (m *ModelSchema) genTypes(template *template.Template) error {
 	buf := new(bytes.Buffer)
 	path := m.OutPath + "/typs.go"
 
-	err := template.ExecuteTemplate(buf, strings.TrimLeft(modelTyps, "/"), *m)
-	if err != nil {
-		return err
-	}
-
 	exists, err := filex.PathExists(path)
 	if err != nil || !exists {
 		common, err := os.ReadFile(m.TemplateFilePath + modelComTyps)
@@ -121,7 +116,7 @@ func (m *ModelSchema) genTypes(template *template.Template) error {
 		}
 		return CreateAndWriteFile(m.OutPath, "typs.go", string(append(common, buf.Bytes()...)))
 	}
-	return filex.AppendToFile(path, buf.Bytes())
+	return nil
 }
 
 func (m *ModelSchema) genModel(template *template.Template) error {
@@ -172,7 +167,8 @@ func (m *ModelSchema) genModel(template *template.Template) error {
 			return err
 		}
 
-		fileName := t.StyleName + ".go"
+		fileName := getRealNameByStyle(t.CamelName+"Model.go", m.GoZeroStyle)
+
 		err = CreateAndWriteFile(m.OutPath, fileName, buf.String())
 		if err != nil {
 			return err

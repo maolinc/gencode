@@ -1,7 +1,7 @@
 {{ $prefix := .Prefix }} {{ $serviceName := .ServiceName }}
 syntax = "{{.Syntax}}"
 
-info(
+info (
 	title: "{{.CamelName}}"
 	desc: "{{.Comment}}"
 	author: "{{.Author}}"
@@ -14,7 +14,7 @@ import (
 )
 
 //-----------------------{{.CamelName}}的接口-----------------------
-@server(
+@server (
 	prefix: {{$prefix}}/{{.CamelName}}
 	group: {{toLower .CamelName}}
 )
