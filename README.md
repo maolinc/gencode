@@ -212,7 +212,6 @@ V显示规则: 1(create), 2(update),4(select),8(delete), 1+2=3(create,update)
 效果图
 - model
 
-![img.png](img.png)
-
-## 其他
-1. 查询sql部分参考了https://github.com/Mikaelemmmm/sql2pb
+![1685533140800](https://github.com/maolinc/gencode/assets/82015883/8b5815b4-e75c-4ed4-9fdb-8b0344bf84d4)
+- api、proto略
+- 
