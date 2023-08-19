@@ -9,19 +9,6 @@ info (
 	version: "{{.Version}}"
 )
 
-type SearchItem {
-    Table string `json:"table,optional"` //表
-    Field string `json:"field"` // 字段
-    Value string `json:"value"` // 值
-    Type string `json:"type"` // 值的数据类型 number string date numberArray stringArray
-    Operator string `json:"operator"` // 操作符 = != > >= 包含 不包含...
-    Logic string  `json:"logic,optional"` // 逻辑符 and | or
-}
-type SearchGroup {
-    Group []SearchItem `json:"group"` // 条件组合
-    Logic string `json:"logic,optional"` // 逻辑符 and | or
-}
-
 // 基本查询参数, 根据自己需要进行修改
 type SearchBase {
     Keyword string `json:"keyword,optional"`          // 关键字
@@ -30,7 +17,7 @@ type SearchBase {
     PageSize int `json:"pageSize,default=20,optional"`           // 每页条数
     PageCurrent int `json:"pageCurrent,default=1,optional"`     // 当前页
     OrderSort []string `json:"orderSort,optional"`    // 排序 eg： ["create_time asc", "id desc"]
-    SearchPlus []SearchGroup `json:"searchPlus,optional"` // 加强版自定义搜索参数
+    SearchPlus string `json:"searchPlus,optional"` // 加强版自定义搜索参数
 }
 
 // 统一分页返回
@@ -41,12 +28,3 @@ type PageBase {
     PageTotal int `json:"pageTotal,omitempty"` // 总分页数
     LastCursor int64 `json:"lastCursor,omitempty"` // 使用游标分页时, 返回最后一个游标
 }
-
-type (
-    IdReq {
-        Id int64 `json:"id"`
-    }
-    IdsReq {
-        Ids []int64 `json:"ids"`
-    }
-)

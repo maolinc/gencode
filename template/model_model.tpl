@@ -6,7 +6,11 @@ import (
 	"database/sql"
 	{{if .IsCache -}}
 	"fmt"
+	"time"
+    "gitee.com/maolinc/vision-soul-common/collectx"
+	"gitee.com/maolinc/vision-soul-common/utilx"
 	"github.com/zeromicro/go-zero/core/stores/cache"
+	"github.com/zeromicro/go-zero/core/stores/redis"
 	{{end -}}
 	"gorm.io/gorm"
 	{{if .IsDate}}"time"{{end -}}
@@ -22,7 +26,7 @@ type (
     {{range  .Fields}}    {{.CamelName}}  {{.DataType}}  `gorm:"{{.Name}} {{- if .IsPrimary}};primary_key{{end}}"` //{{.Comment}}
     {{end}}}
 
-    // {{.CamelName}} query cond
+    // {{.CamelName}}Query query cond
     {{.CamelName}}Query struct {
         SearchBase
         {{.CamelName}}
@@ -48,18 +52,28 @@ type (
     	// FindListByCursor Cursor is required based on cursor paging, Only the primary key is of type int, and other types can be expanded by themselves
     	FindListByCursor(ctx context.Context, cond *{{.CamelName}}Query) (list []*{{.CamelName}}, err error)
     	FindAll(ctx context.Context, cond *{{.CamelName}}Query) (list []*{{.CamelName}}, err error)
+    	// FindListByIds
+    	FindListByIds(ctx context.Context, ids []{{.Primary.DataType}}) (list []*Picture, err error)
     	// ---------------Write your other interfaces below---------------
     }
 
     default{{.CamelName}}Model struct {
     	*customConn
+    	{{if .IsCache}}
+		redis  *redis.Redis
+		expire time.Duration
+        {{end}}
     	table string
     }
 )
 
-func New{{.CamelName}}Model(db *gorm.DB {{- if .IsCache}}, c cache.CacheConf{{end}}) {{.CamelName}}Model {
+func New{{.CamelName}}Model(db *gorm.DB {{- if .IsCache}}, c cache.CacheConf, redis *redis.Redis{{end}}) {{.CamelName}}Model {
 	return &default{{.CamelName}}Model{
 		customConn: {{if .IsCache}}newCustomConn(db, c){{else}}newCustomConnNoCache(db){{end}},
+		{{if .IsCache}}
+        redis:      redis,
+        expire:     10,
+		{{end}}
 		table:      "{{.Name}}",
 	}
 }
@@ -87,7 +101,7 @@ func (m *default{{.CamelName}}Model) Trans(ctx context.Context, fn func(ctx cont
 
 func (m *default{{.CamelName}}Model) Insert(ctx context.Context, data *{{.CamelName}}, db ...*gorm.DB) (err error) {
 	{{if .IsCache -}}
-	cacheKey := fmt.Sprintf("%s{{.PrimaryFmt}}", cache{{.CamelName}}PrimaryPrefix, {{.PrimaryFmtV}})
+	cacheKey := m.getPrimaryCacheKey(data.{{.Primary.CamelName}})
 	{{end -}}
 	return m.Exec(ctx, func() error {
 		return m.conn(ctx, db...).Create(data).Error
@@ -96,7 +110,7 @@ func (m *default{{.CamelName}}Model) Insert(ctx context.Context, data *{{.CamelN
 
 func (m *default{{.CamelName}}Model) Update(ctx context.Context, data *{{.CamelName}}, db ...*gorm.DB) (err error) {
 	{{if .IsCache -}}
-	cacheKey := fmt.Sprintf("%s{{.PrimaryFmt}}", cache{{.CamelName}}PrimaryPrefix, {{.PrimaryFmtV}})
+	cacheKey := m.getPrimaryCacheKey(data.{{.Primary.CamelName}})
 	{{end -}}
 	return m.Exec(ctx, func() error {
 		return m.conn(ctx, db...).Model(&data).Updates(data).Error
@@ -105,7 +119,7 @@ func (m *default{{.CamelName}}Model) Update(ctx context.Context, data *{{.CamelN
 
 func (m *default{{.CamelName}}Model) Delete(ctx context.Context, {{.PrimaryFields}}, db ...*gorm.DB) (err error) {
 	{{if .IsCache -}}
-	cacheKey := fmt.Sprintf("%s{{.PrimaryFmt}}", cache{{.CamelName}}PrimaryPrefix, {{.PrimaryFmtV2}})
+	cacheKey := m.getPrimaryCacheKey({{.PrimaryFmtV2}})
 	{{end -}}
 	return m.Exec(ctx, func() error {
 		return m.conn(ctx, db...).Where("{{.PrimaryFieldWhere}}", {{.PrimaryFmtV2}}).Delete({{.CamelName}}{}).Error
@@ -114,7 +128,7 @@ func (m *default{{.CamelName}}Model) Delete(ctx context.Context, {{.PrimaryField
 
 func (m *default{{.CamelName}}Model) ForceDelete(ctx context.Context, {{.PrimaryFields}}, db ...*gorm.DB) (err error) {
 	{{if .IsCache -}}
-	cacheKey := fmt.Sprintf("%s{{.PrimaryFmt}}", cache{{.CamelName}}PrimaryPrefix, {{.PrimaryFmtV2}})
+	cacheKey := m.getPrimaryCacheKey({{.PrimaryFmtV2}})
 	{{end -}}
 	return m.Exec(ctx, func() error {
 		return m.conn(ctx, db...).Unscoped().Where("{{.PrimaryFieldWhere}}", {{.PrimaryFmtV2}}).Delete({{.CamelName}}{}).Error
@@ -130,7 +144,7 @@ func (m *default{{.CamelName}}Model) Count(ctx context.Context, cond *{{.CamelNa
 
 func (m *default{{.CamelName}}Model) FindOne(ctx context.Context, {{.PrimaryFields}}) (data *{{.CamelName}}, err error) {
 	{{if .IsCache -}}
-	cacheKey := fmt.Sprintf("%s{{.PrimaryFmt}}", cache{{.CamelName}}PrimaryPrefix, {{.PrimaryFmtV2}})
+	cacheKey := m.getPrimaryCacheKey({{.PrimaryFmtV2}})
     {{end -}}
 	err = m.QueryRow(ctx, &data, func(v interface{}) error {
 		tx := m.conn(ctx).Where("{{.PrimaryFieldWhere}}", {{.PrimaryFmtV2}}).Find(v)
@@ -163,8 +177,22 @@ func (m *default{{.CamelName}}Model) FindListByPage(ctx context.Context, cond *{
 	    searchPlusScope(cond.SearchPlus, m.table),
 		orderScope(cond.OrderSort...),
 		pageScope(cond.PageCurrent, cond.PageSize),
-	)
-	err = conn.Where(cond.{{.CamelName}}).Find(&list).Error
+	).Where(cond.{{.CamelName}})
+
+	{{if .IsCache}}
+    ids := make([]{{.Primary.DataType}}, 0, cond.PageSize)
+    if err = conn.Pluck("{{.Primary.Name}}", &ids).Error; err != nil {
+        return nil, err
+    }
+    if len(ids) == 0 {
+        return list, nil
+    }
+
+    list, err = m.FindListByIds(ctx, ids)
+	{{else}}
+	err = conn.Find(&list).Error
+	{{end}}
+
 	return list, err
 }
 
@@ -186,3 +214,60 @@ func (m *default{{.CamelName}}Model) FindAll(ctx context.Context, cond *{{.Camel
 	err = conn.Where(cond.{{.CamelName}}).Find(&list).Error
 	return list, err
 }
+
+func (m *defaultPictureModel) FindListByIds(ctx context.Context, ids []{{.Primary.DataType}}) (list []*Picture, err error) {
+    {{if .IsCache}}
+    idKeys := m.getCacheKeysByIds(ids)
+    jsonArr, err := m.redis.Mget(idKeys...)
+    if err != nil {
+        return list, nil
+    }
+    list = utilx.Json2StructArr[{{.CamelName}}](jsonArr)
+    if len(list) == len(ids) {
+        return list, nil
+    }
+
+    notExistIds := make([]{{.Primary.DataType}}, 0)
+    set := collectx.NewSet[int64]()
+    for _, item := range list {
+        set.Add(item.{{.Primary.CamelName}})
+    }
+    for _, id := range ids {
+        if set.Add(id) {
+            notExistIds = append(notExistIds, id)
+        }
+    }
+    dbList := make([]*{{.CamelName}}, 0, len(notExistIds))
+    err = m.conn(ctx).Where("{{.Primary.Name}} in ?", notExistIds).Find(&dbList).Error
+    if err != nil {
+        return nil, err
+    }
+
+    _ = m.redis.PipelinedCtx(ctx, func(pipeliner redis.Pipeliner) error {
+        for _, item := range dbList {
+            key := m.getPrimaryCacheKey(item.{{.Primary.CamelName}})
+            pipeliner.SetEX(ctx, key, item, m.expire)
+        }
+        return nil
+    })
+
+    return append(list, dbList...), nil
+    {{else}}
+    {{end}}
+}
+
+
+{{if .IsCache}}
+func (m *default{{.CamelName}}Model) getPrimaryCacheKey({{.PrimaryFields}}) string {
+	return fmt.Sprintf("%s{{.PrimaryFmt}}", cache{{.CamelName}}PrimaryPrefix, {{.PrimaryFmtV2}})
+}
+
+func (m *defaultPictureModel) getCacheKeysByIds(ids []{{.Primary.DataType}}) []string {
+	idKeys := make([]string, 0, len(ids))
+	for _, id := range ids {
+		idKeys = append(idKeys, fmt.Sprintf("%s%v", cachePicturePrimaryPrefix, id))
+	}
+	return idKeys
+}
+
+{{end}}
