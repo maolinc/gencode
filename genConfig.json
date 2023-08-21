@@ -1,29 +1,31 @@
 {
   "DBConfig": {
     "DbType": "mysql",
-    "DBName": "",
-    "Host": "",
+    "DBName": "vision_soul",
+    "Host": "101.33.244.52",
     "Port": 3306,
-    "User": "",
-    "Password": ""
+    "User": "root",
+    "Password": "lucas9"
   },
   "GlobalConfig": {
-    "ServiceName": "artifact"
+    "FieldStyle": "m_lc",
+    "ServiceName": "vision_soul"
   },
   "ApiConfig": {
     "Switch": "C",
-    "OutPath": "C:\\Users\\maolin.chen\\Desktop\\me\\workspace\\xyz\\app\\artifact/api",
+    "OutPath": "D:\\CML\\Desktop\\ai\\vision-soul",
     "GoZeroStyle": "go_zero",
-    "DateStyle": "string"
+    "DateStyle": "string",
+    "Tables": ["picture"]
   },
   "ProtoConfig": {
-    "Switch": "B",
+    "Switch": "C",
     "OutPath": "artifact/rpc"
   },
   "ModelConfig": {
-    "Switch": "C",
-    "OutPath": "C:\\Users\\maolin.chen\\Desktop\\me\\workspace\\xyz\\app\\artifact/model",
-    "Tables": [],
-    "IsCache": true
+    "Switch": "B",
+    "OutPath": "D:\\CML\\Desktop\\ai\\vision-soul\\model",
+    "IsCache": true,
+    "Tables": ["file_object"]
   }
 }

@@ -53,7 +53,7 @@ type (
     	FindListByCursor(ctx context.Context, cond *{{.CamelName}}Query) (list []*{{.CamelName}}, err error)
     	FindAll(ctx context.Context, cond *{{.CamelName}}Query) (list []*{{.CamelName}}, err error)
     	// FindListByIds
-    	FindListByIds(ctx context.Context, ids []{{.Primary.DataType}}) (list []*Picture, err error)
+    	FindListByIds(ctx context.Context, ids []{{.Primary.DataType}}) (list []*{{.CamelName}}, err error)
     	// ---------------Write your other interfaces below---------------
     }
 
@@ -215,7 +215,7 @@ func (m *default{{.CamelName}}Model) FindAll(ctx context.Context, cond *{{.Camel
 	return list, err
 }
 
-func (m *defaultPictureModel) FindListByIds(ctx context.Context, ids []{{.Primary.DataType}}) (list []*Picture, err error) {
+func (m *default{{.CamelName}}Model) FindListByIds(ctx context.Context, ids []{{.Primary.DataType}}) (list []*{{.CamelName}}, err error) {
     {{if .IsCache}}
     idKeys := m.getCacheKeysByIds(ids)
     jsonArr, err := m.redis.Mget(idKeys...)
@@ -262,7 +262,7 @@ func (m *default{{.CamelName}}Model) getPrimaryCacheKey({{.PrimaryFields}}) stri
 	return fmt.Sprintf("%s{{.PrimaryFmt}}", cache{{.CamelName}}PrimaryPrefix, {{.PrimaryFmtV2}})
 }
 
-func (m *defaultPictureModel) getCacheKeysByIds(ids []{{.Primary.DataType}}) []string {
+func (m *default{{.CamelName}}Model) getCacheKeysByIds(ids []{{.Primary.DataType}}) []string {
 	idKeys := make([]string, 0, len(ids))
 	for _, id := range ids {
 		idKeys = append(idKeys, fmt.Sprintf("%s%v", cachePicturePrimaryPrefix, id))
