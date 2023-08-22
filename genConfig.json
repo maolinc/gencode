@@ -3,27 +3,29 @@
     "DbType": "mysql",
     "DBName": "",
     "Host": "",
-    "Port": 3306,
+    "Port": ,
     "User": "",
     "Password": ""
   },
   "GlobalConfig": {
-    "ServiceName": "artifact"
+    "FieldStyle": "m_lc",
+    "ServiceName": ""
   },
   "ApiConfig": {
     "Switch": "C",
-    "OutPath": "C:\\Users\\maolin.chen\\Desktop\\me\\workspace\\xyz\\app\\artifact/api",
+    "OutPath": "",
     "GoZeroStyle": "go_zero",
-    "DateStyle": "string"
+    "DateStyle": "string",
+    "Tables": [""]
   },
   "ProtoConfig": {
-    "Switch": "B",
-    "OutPath": "artifact/rpc"
+    "Switch": "C",
+    "OutPath": ""
   },
   "ModelConfig": {
     "Switch": "C",
-    "OutPath": "C:\\Users\\maolin.chen\\Desktop\\me\\workspace\\xyz\\app\\artifact/model",
-    "Tables": [],
-    "IsCache": true
+    "OutPath": "",
+    "IsCache": true,
+    "Tables": [""]
   }
 }

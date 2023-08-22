@@ -10,7 +10,7 @@ info (
 )
 
 import (
-    "types/common.api"
+    "common.api"
 )
 
 //-----------------------{{.CamelName}}的接口-----------------------

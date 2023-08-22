@@ -70,6 +70,14 @@ func (c *customConn) QueryRow(ctx context.Context, v interface{}, query func(v i
 	})
 }
 
+func getCacheKeysByIds(prefixFormat string, ids []any) []string {
+	idKeys := make([]string, 0, len(ids))
+	for _, id := range ids {
+		idKeys = append(idKeys, fmt.Sprintf("%s%v", prefixFormat, id))
+	}
+	return idKeys
+}
+
 // -----------gorm  common scope----------------------
 // Normal pagination
 func pageScope(pageCurrent, pageSize int) func(db *gorm.DB) *gorm.DB {
@@ -151,74 +159,41 @@ func searchPlusScope(plus []SearchGroup, tableName string) func(db *gorm.DB) *go
 				if searchItem.Field == "" {
 					continue
 				}
-				value, typ, operator := searchItem.Value, strings.ToLower(searchItem.Type), strings.ToLower(searchItem.Operator)
+				typ, operator := strings.ToLower(searchItem.Type), strings.ToLower(searchItem.Operator)
 				var (
-					v     any
 					err   error
 					logic = getLogic(searchItem.Logic)
 				)
-
-				switch typ {
-				case "number":
-					v, err = strconv.ParseInt(value, 10, 64)
-				case "float":
-					v, err = strconv.ParseFloat(value, 64)
-				case "date":
-					if v1, err := strconv.ParseInt(value, 10, 64); err == nil {
-						if t := time.Unix(v1, 0); err == nil {
-							v = t.String()
-						}
-						break
-					}
-					if t, err := time.Parse("2006-01-02 15:04:05", value); err == nil {
-						v = t.String()
-					}
-				case "string":
-					if !strings.HasPrefix(value, "\"") {
-						// ”abc“ -> ""abc""
-						value = fmt.Sprintf("\"%s\"", value)
-					}
-					v, err = unmarshal[string](value)
-					if operator == "包含" || operator == "不包含" || operator == "like" || operator == "not like" {
-						v = fmt.Sprintf("%%%v%%", v)
-					}
-				case "stringarray":
-					if strings.HasPrefix(value, "[") {
-						//  "[”a”,“b”,“c“]"
-						v, err = unmarshal[[]string](value)
-					} else {
-						// "a,b,c"
-						v = strings.Split(value, ",")
-					}
-				case "numberarray":
-					if !strings.HasPrefix(value, "[") {
-						// 1,2,3 -> "[1,2,3]"
-						value = fmt.Sprintf("[%s]", value)
-					}
-					v, err = unmarshal[[]int64](value)
-				case "floatarray":
-					if !strings.HasPrefix(value, "[") {
-						// 1,2,3.2 -> "[1,2,3.2]"
-						value = fmt.Sprintf("[%s]", value)
-					}
-					v, err = unmarshal[[]float64](value)
-				default:
-					v = value
+				value, err := getRealValue(typ, searchItem.Value)
+				if err != nil || value == nil {
+					continue
 				}
 
-				if err != nil || v == nil {
-					continue
+				switch vv := reflect.ValueOf(value); vv.Kind() {
+				case reflect.Slice:
+					if operator == "不包含" || operator == "!=" {
+						operator = "NOT IN"
+					} else if operator == "包含" || operator == "=" {
+						operator = "IN"
+					}
+				default:
+					if operator == "不包含" {
+						operator = "NOT LIKE"
+					} else if operator == "包含" {
+						operator = "LIKE"
+					}
+					value = fmt.Sprintf("%%%v%%", value)
 				}
 
 				if subQ.Len() != 0 {
 					fmt.Fprintf(&subQ, " %s ", logic)
 				}
 				if searchItem.Table == "" {
-					fmt.Fprintf(&subQ, "`%s`.`%s` %s ?", tableName, searchItem.Field, getOperator(operator, typ))
+					fmt.Fprintf(&subQ, "`%s`.`%s` %s ?", tableName, searchItem.Field, operator)
 				} else {
-					fmt.Fprintf(&subQ, "`%s`.`%s` %s ?", searchItem.Table, searchItem.Field, getOperator(operator, typ))
+					fmt.Fprintf(&subQ, "`%s`.`%s` %s ?", searchItem.Table, searchItem.Field, operator)
 				}
-				queryArgs = append(queryArgs, v)
+				queryArgs = append(queryArgs, value)
 			}
 			if subQ.Len() == 0 {
 				continue
@@ -241,31 +216,39 @@ func searchPlusScope(plus []SearchGroup, tableName string) func(db *gorm.DB) *go
 }
 
 func getLogic(logic string) string {
-	logic = strings.ToLower(logic)
-	if logic != "and" && logic != "or" {
-		return "and"
+	logic = strings.ToUpper(logic)
+	if logic != "And" && logic != "OR" {
+		return "And"
 	}
 	return logic
 }
 
-func getOperator(oper, typ string) string {
-	switch oper {
-	case "包含":
-		if typ == "string" {
-			return "like"
+func getRealValue(typ string, value interface{}) (interface{}, error) {
+	var (
+		v   interface{}
+		err error
+	)
+	switch typ {
+	case "date":
+		var dataT time.Time
+		switch vv := value.(type) {
+		case float64:
+			dataT = time.Unix(int64(vv), 0)
+		case float32:
+			dataT = time.Unix(int64(vv), 0)
+		case int64:
+			dataT = time.Unix(vv, 0)
+		case int:
+			dataT = time.Unix(int64(vv), 0)
+		case string:
+			if dataT, err = time.Parse("2006-01-02 15:04:05", vv); err != nil {
+				dataT = time.Now()
+			}
 		}
-		return "in"
-	case "不包含":
-		if typ == "string" {
-			return "not like"
-		}
-		return "not in"
+		v = dataT.UTC().Format("2006-01-02 15:04:05")
+	default:
+		v = value
 	}
-	return oper
-}
 
-func unmarshal[T any](v string) (T, error) {
-	var t T
-	err := json.Unmarshal([]byte(v), &t)
-	return t, err
+	return v, err
 }
